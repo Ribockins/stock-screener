@@ -45,9 +45,19 @@ class StockScreener:
                 logger.warning(f"No data for {symbol}")
                 return None
             
+            # Reset index to get integer-based indexing
+            close_prices = data['close'].reset_index(drop=True)
+            
             # Calculate RSI
-            rsi = self.rsi_calc.calculate_rsi(data['close'], rsiconfig.RSI_PERIOD)
-            current_rsi = rsi.iloc[-1]
+            rsi = self.rsi_calc.calculate_rsi(close_prices, rsiconfig.RSI_PERIOD)
+            
+            # Remove NaN values and get the last RSI value
+            rsi_clean = rsi.dropna()
+            if rsi_clean.empty:
+                logger.warning(f"RSI calculation failed for {symbol} - all NaN values")
+                return None
+            
+            current_rsi = float(rsi_clean.iloc[-1])
             
             if pd.isna(current_rsi):
                 logger.warning(f"RSI calculation failed for {symbol}")
@@ -61,8 +71,8 @@ class StockScreener:
             )
             
             # Detect divergences
-            bullish_divs = self.divergence_detector.detect_bullish_divergence(data['close'], rsi)
-            bearish_divs = self.divergence_detector.detect_bearish_divergence(data['close'], rsi)
+            bullish_divs = self.divergence_detector.detect_bullish_divergence(close_prices, rsi)
+            bearish_divs = self.divergence_detector.detect_bearish_divergence(close_prices, rsi)
             
             divergence_type = "NONE"
             divergence_strength = ""
@@ -74,11 +84,14 @@ class StockScreener:
                 divergence_type = "BEARISH"
                 divergence_strength = bearish_divs[-1].strength
             
+            # Get current price
+            current_price = float(close_prices.iloc[-1])
+            
             result = {
                 'symbol': symbol,
                 'market': market,
                 'timestamp': datetime.utcnow(),
-                'price': data['close'].iloc[-1],
+                'price': current_price,
                 'rsi': round(current_rsi, 2),
                 'rsi_signal': rsi_signal,
                 'divergence_type': divergence_type,
@@ -91,7 +104,7 @@ class StockScreener:
             return result
             
         except Exception as e:
-            logger.error(f"Error scanning {symbol}: {e}")
+            logger.error(f"Error scanning {symbol}: {e}", exc_info=True)
             return None
 
     def scan_market(self, market: str, symbols: List[str]) -> List[Dict]:
