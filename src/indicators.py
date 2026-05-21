@@ -20,11 +20,34 @@ class RSICalculator:
         Returns:
             Series of RSI values
         """
-        delta = prices.diff()
-        gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
-        loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
+        # Reset index to ensure we have proper integer indexing
+        if not isinstance(prices.index, pd.RangeIndex):
+            prices = prices.reset_index(drop=True)
         
-        rs = gain / loss
+        # Convert to numeric, handling any string values
+        prices = pd.to_numeric(prices, errors='coerce')
+        
+        # Remove NaN values
+        prices = prices.dropna()
+        
+        if len(prices) < period + 1:
+            return pd.Series([np.nan] * len(prices))
+        
+        delta = prices.diff()
+        
+        # Separate gains and losses
+        gain = delta.where(delta > 0, 0)
+        loss = -delta.where(delta < 0, 0)
+        
+        # Calculate average gain and loss
+        avg_gain = gain.rolling(window=period, min_periods=period).mean()
+        avg_loss = loss.rolling(window=period, min_periods=period).mean()
+        
+        # Avoid division by zero
+        avg_loss = avg_loss.replace(0, np.nan)
+        
+        # Calculate RS and RSI
+        rs = avg_gain / avg_loss
         rsi = 100 - (100 / (1 + rs))
         
         return rsi
@@ -42,6 +65,9 @@ class RSICalculator:
         Returns:
             Signal type: 'OVERSOLD', 'OVERBOUGHT', or 'NEUTRAL'
         """
+        if pd.isna(rsi):
+            return "NEUTRAL"
+        
         if rsi < oversold:
             return "OVERSOLD"
         elif rsi > overbought:
@@ -61,11 +87,14 @@ class MomentumIndicators:
         Returns:
             Tuple of (MACD line, Signal line, Histogram)
         """
-        ema_fast = prices.ewm(span=fast).mean()
-        ema_slow = prices.ewm(span=slow).mean()
+        # Convert to numeric
+        prices = pd.to_numeric(prices, errors='coerce')
+        
+        ema_fast = prices.ewm(span=fast, adjust=False).mean()
+        ema_slow = prices.ewm(span=slow, adjust=False).mean()
         
         macd_line = ema_fast - ema_slow
-        signal_line = macd_line.ewm(span=signal).mean()
+        signal_line = macd_line.ewm(span=signal, adjust=False).mean()
         histogram = macd_line - signal_line
         
         return macd_line, signal_line, histogram
@@ -78,10 +107,19 @@ class MomentumIndicators:
         Returns:
             Tuple of (K line, D line)
         """
+        # Convert to numeric
+        high = pd.to_numeric(high, errors='coerce')
+        low = pd.to_numeric(low, errors='coerce')
+        close = pd.to_numeric(close, errors='coerce')
+        
         lowest_low = low.rolling(k_period).min()
         highest_high = high.rolling(k_period).max()
         
-        k_line = 100 * (close - lowest_low) / (highest_high - lowest_low)
+        # Avoid division by zero
+        denominator = highest_high - lowest_low
+        denominator = denominator.replace(0, np.nan)
+        
+        k_line = 100 * (close - lowest_low) / denominator
         d_line = k_line.rolling(d_period).mean()
         
         return k_line, d_line
