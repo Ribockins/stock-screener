@@ -2,7 +2,10 @@
 
 import pandas as pd
 import numpy as np
-from typing import Tuple, List
+from typing import Tuple, List, Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class RSICalculator:
@@ -18,9 +21,14 @@ class RSICalculator:
             period: RSI period (default 14)
             
         Returns:
-            Series of RSI values
+            Series of RSI values or empty Series if calculation fails
         """
-        # Reset index to ensure we have proper integer indexing
+        # Validate input
+        if prices is None or prices.empty:
+            logger.warning("Input prices series is empty")
+            return pd.Series([])
+        
+        # Reset index to ensure integer-based indexing
         if not isinstance(prices.index, pd.RangeIndex):
             prices = prices.reset_index(drop=True)
         
@@ -28,12 +36,17 @@ class RSICalculator:
         prices = pd.to_numeric(prices, errors='coerce')
         
         # Remove NaN values
-        prices = prices.dropna()
+        prices_clean = prices.dropna()
         
-        if len(prices) < period + 1:
-            return pd.Series([np.nan] * len(prices))
+        # Check if we have enough data
+        if len(prices_clean) < period + 1:
+            logger.warning(f"Insufficient data for RSI calculation: {len(prices_clean)} bars, need {period + 1}")
+            return pd.Series([])
         
-        delta = prices.diff()
+        # Reset index for calculations
+        prices_clean = prices_clean.reset_index(drop=True)
+        
+        delta = prices_clean.diff()
         
         # Separate gains and losses
         gain = delta.where(delta > 0, 0)
@@ -50,6 +63,11 @@ class RSICalculator:
         rs = avg_gain / avg_loss
         rsi = 100 - (100 / (1 + rs))
         
+        # Validate RSI output
+        if rsi.isna().all():
+            logger.warning("RSI calculation resulted in all NaN values")
+            return pd.Series([])
+        
         return rsi
 
     @staticmethod
@@ -65,7 +83,13 @@ class RSICalculator:
         Returns:
             Signal type: 'OVERSOLD', 'OVERBOUGHT', or 'NEUTRAL'
         """
-        if pd.isna(rsi):
+        # Check for NaN
+        if pd.isna(rsi) or not isinstance(rsi, (int, float)):
+            return "NEUTRAL"
+        
+        # Ensure rsi is in valid range [0, 100]
+        if rsi < 0 or rsi > 100:
+            logger.warning(f"RSI value {rsi} out of valid range [0, 100]")
             return "NEUTRAL"
         
         if rsi < oversold:
@@ -87,8 +111,15 @@ class MomentumIndicators:
         Returns:
             Tuple of (MACD line, Signal line, Histogram)
         """
+        if prices is None or prices.empty:
+            return pd.Series([]), pd.Series([]), pd.Series([])
+        
         # Convert to numeric
         prices = pd.to_numeric(prices, errors='coerce')
+        prices = prices.dropna()
+        
+        if len(prices) < slow + 1:
+            return pd.Series([]), pd.Series([]), pd.Series([])
         
         ema_fast = prices.ewm(span=fast, adjust=False).mean()
         ema_slow = prices.ewm(span=slow, adjust=False).mean()
@@ -107,10 +138,16 @@ class MomentumIndicators:
         Returns:
             Tuple of (K line, D line)
         """
+        if high is None or low is None or close is None:
+            return pd.Series([]), pd.Series([])
+        
         # Convert to numeric
         high = pd.to_numeric(high, errors='coerce')
         low = pd.to_numeric(low, errors='coerce')
         close = pd.to_numeric(close, errors='coerce')
+        
+        if high.empty or low.empty or close.empty:
+            return pd.Series([]), pd.Series([])
         
         lowest_low = low.rolling(k_period).min()
         highest_high = high.rolling(k_period).max()
