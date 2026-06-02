@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# Local config and runtime
+.env
+screener.db
+*.log
+stock_screener.log
+
+# IDE
+.idea/
+.vscode/
