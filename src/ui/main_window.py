@@ -10,12 +10,13 @@ import time
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
     QPushButton, QLabel, QTableWidget, QTableWidgetItem,
-    QComboBox, QSpinBox, QCheckBox, QDialog, QTabWidget,
-    QStatusBar, QMenu, QMenuBar
+    QComboBox, QSpinBox, QCheckBox, QDialog,
+    QStatusBar
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QObject, QThread, QSize
-from PyQt6.QtGui import QColor, QIcon, QFont, QSystemTrayIcon
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtGui import QColor, QFont
+from PyQt6.QtWidgets import QApplication, QSystemTrayIcon, QMenu
+from PyQt6.QtGui import QIcon
 
 from src.screener import StockScreener
 import rsiconfig
@@ -58,7 +59,6 @@ class MainWindow(QMainWindow):
         
         # Setup UI
         self.setup_ui()
-        self.setup_tray()
         self.setup_threads()
         
         # Auto-update timer
@@ -144,24 +144,6 @@ class MainWindow(QMainWindow):
         
         # Status bar
         self.statusBar().showMessage("Ready")
-    
-    def setup_tray(self):
-        """Setup system tray icon"""
-        self.tray_icon = QSystemTrayIcon(self)
-        self.tray_icon.setToolTip("Stock Signal Monitor")
-        
-        # Tray menu
-        tray_menu = QMenu()
-        show_action = tray_menu.addAction("Show")
-        show_action.triggered.connect(self.show)
-        hide_action = tray_menu.addAction("Hide")
-        hide_action.triggered.connect(self.hide)
-        tray_menu.addSeparator()
-        exit_action = tray_menu.addAction("Exit")
-        exit_action.triggered.connect(self.close)
-        
-        self.tray_icon.setContextMenu(tray_menu)
-        self.tray_icon.show()
     
     def setup_threads(self):
         """Setup worker threads"""
@@ -362,12 +344,6 @@ class MainWindow(QMainWindow):
             
             if premium_count > 0:
                 self.play_notification_sound()
-                self.tray_icon.showMessage(
-                    "🟢 Premium Signal Found!",
-                    f"{premium_count} premium signals detected!",
-                    QSystemTrayIcon.MessageIcon.Information,
-                    5000  # 5 seconds
-                )
         except Exception as e:
             logger.error(f"Error checking premium signals: {e}")
     
