@@ -1,0 +1,12 @@
+{
+  "refresh_minutes": 5,
+  "timeframe": "60",
+  "bars": 120,
+  "instruments": [
+    {"symbol": "AAPL", "exchange": "NASDAQ", "name": "Apple"},
+    {"symbol": "MSFT", "exchange": "NASDAQ", "name": "Microsoft"},
+    {"symbol": "GOOGL", "exchange": "NASDAQ", "name": "Alphabet"},
+    {"symbol": "TSLA", "exchange": "NASDAQ", "name": "Tesla"},
+    {"symbol": "NVDA", "exchange": "NASDAQ", "name": "NVIDIA"}
+  ]
+}
