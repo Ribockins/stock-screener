@@ -1,0 +1,22 @@
+"""Requirements for desktop application"""
+
+# Core dependencies
+tvdatafeed==1.0.19
+pandas==2.0.3
+numpy==1.24.3
+ta-lib==0.4.28
+sqlalchemy==2.0.20
+psycopg2-binary==2.9.7
+pymongo==4.4.1
+python-dotenv==1.0.0
+requests==2.31.0
+schedule==1.2.0
+pytz==2023.3
+yfinance==0.2.32
+
+# Desktop UI dependencies
+PyQt6==6.6.1
+PyQt6-sip==13.6.0
+
+# Optional: for building exe
+pyinstaller==6.1.0
