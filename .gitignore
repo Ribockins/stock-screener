@@ -13,3 +13,7 @@ stock_screener.log
 # IDE
 .idea/
 .vscode/
+
+# Generated cloud reports
+reports/*.json
+reports/*.md

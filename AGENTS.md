@@ -1,48 +1,52 @@
 # AGENTS.md
 
-## Cursor Cloud specific instructions
+## Cursor Cloud — Option C (cloud-only, no local PC)
 
-### What this repo is
+Users on **Option C** do not run `install.bat` or `gem_app.py` on their computer. All GEM Logic scans run in **this Cloud VM**.
 
-Python **RSI & divergence stock screener** (H1 timeframe). Main entry points:
+### On each Cloud Agent session (automatic layer)
 
-| Surface | Command |
-|---------|---------|
-| CLI one-shot scan | `python scripts/run_screener.py` |
-| CLI scheduler | `python scripts/schedule_screener.py` |
-| Desktop UI (PyQt6) | `python desktop_app.py` |
+The VM **update script** refreshes `.venv`, installs platform deps, and `tvdatafeed` shim.
 
-Config: `rsiconfig.py` and optional `.env` (copy from `.env.example`). Default DB is **SQLite** (`screener.db`).
+### Run a scan for the user
 
-### Environment bootstrap (first time)
+```bash
+cd /workspace && source .venv/bin/activate
+python scripts/cloud_gem_report.py
+```
 
-1. **Virtualenv** — `python3-venv` may be missing; use `virtualenv` from `~/.local/bin` (install with `pip install --user virtualenv` if needed).
-2. **Activate** — `source .venv/bin/activate` from repo root (`/workspace`).
-3. **`tvdatafeed`** — Not on PyPI at the pinned version. Install from GitHub:
-   `pip install --no-cache-dir git+https://github.com/rongardF/tvdatafeed.git`
-4. **Linux import shim** — The repo imports `tvdatafeed` (lowercase) but the package exposes `tvDatafeed`. After installing, add a venv-only shim (do not commit):
-   ```bash
-   SHIM="$(python -c 'import site; print(site.getsitepackages()[0])')/tvdatafeed"
-   mkdir -p "$SHIM"
-   echo 'from tvDatafeed import *' > "$SHIM/__init__.py"
-   ```
-5. **Other Python deps** — `pip install -r requirements.txt` fails on Python 3.12 (pinned `pandas`/`numpy`/`tvdatafeed`/`ta-lib`). Install unpinned runtime deps instead (see update script). **`ta-lib` is listed but unused** (RSI is pure pandas); skip unless you add TA-Lib system libs.
-6. **Desktop** — `pip install -r requirements_desktop.txt` (same caveats). Requires **GUI display** (`DISPLAY` set) and system GL libs (e.g. `libegl1`); without them PyQt6 exits with `libEGL.so.1` errors.
-7. **Stock lists** — `rsiconfig.STOCK_LISTS` expects `data/stocks/*.txt` (one symbol per line). The repo ships only `.gitkeep`; create local lists before scanning.
+Read **`reports/latest_gem_report.md`** and summarize actionable signals (EMERALD GEM, RUBY GEM, setups, entries).
 
-### Running services
+### Watchlist
 
-No Docker or separate servers. A single Python process plus **outbound network** (TradingView via `tvdatafeed`, **yfinance** fallback).
+Edit **`config/watchlist.json`** when the user asks to add/remove symbols.
 
-- **CLI scan**: `source .venv/bin/activate && python scripts/run_screener.py`
-- **Desktop**: `source .venv/bin/activate && python desktop_app.py` (needs display + EGL)
+### Optional background monitor
 
-### Lint / tests
+```bash
+SESSION_NAME="gem-cloud-monitor"
+tmux -f /exec-daemon/tmux.portal.conf new-session -d -s "$SESSION_NAME" -c /workspace -- \
+  bash -lc './scripts/cloud_monitor_loop.sh'
+```
 
-There is **no** configured linter, pre-commit, or automated test suite. Use `python -m compileall -q src scripts desktop_app.py rsiconfig.py` as a quick syntax check.
+Default refresh: **5 minutes** (`GEM_REFRESH_MINUTES` env).
 
-### Gotchas discovered on Cloud VMs
+### User-facing phrases
 
-- SQLite schema in `database.py` must use separate `CREATE INDEX` statements (inline `INDEX` in `CREATE TABLE` is invalid in SQLite).
-- Newer **yfinance** returns MultiIndex/extra columns; `data_fetcher._fetch_from_yfinance` must flatten columns before renaming.
-- TradingView nologin mode often fails; **yfinance fallback** is what makes scans succeed in practice.
+- "Scan my watchlist" → `cloud_gem_report.py`
+- "Add TSLA" → edit `config/watchlist.json`
+- They do **not** need local install steps
+
+### GEM engine
+
+- Code: `src/gem/` + `src/gem_platform.py`
+- Defaults: RSI 14, OS 28, OB 72, 3 divergence events, 8-bar GEM window
+
+### Data
+
+TradingView (limited nologin) → yfinance fallback. Requires network.
+
+### Legacy
+
+- Old screener: `scripts/run_screener.py`
+- Desktop GUI: `gem_app.py` (needs display; not used for Option C)
