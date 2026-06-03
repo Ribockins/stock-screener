@@ -3,40 +3,17 @@
   "timeframe": "60",
   "bars": 120,
   "instruments": [
-    {"symbol": "^GSPC", "exchange": "INDEX", "name": "US 500 (S&P 500)"},
-    {"symbol": "^DJI", "exchange": "INDEX", "name": "US 30 (Wall Street)"},
-    {"symbol": "^FTSE", "exchange": "INDEX", "name": "UK 100 (FTSE)"},
-    {"symbol": "^GDAXI", "exchange": "INDEX", "name": "Germany 40 (DAX)"},
-    {"symbol": "^FCHI", "exchange": "INDEX", "name": "France 40 (CAC)"},
-
-    {"symbol": "EURUSD=X", "exchange": "FOREX", "name": "EUR/USD"},
-    {"symbol": "GBPUSD=X", "exchange": "FOREX", "name": "GBP/USD"},
-    {"symbol": "USDJPY=X", "exchange": "FOREX", "name": "USD/JPY"},
-    {"symbol": "AUDUSD=X", "exchange": "FOREX", "name": "AUD/USD"},
-    {"symbol": "USDCAD=X", "exchange": "FOREX", "name": "USD/CAD"},
-    {"symbol": "USDCHF=X", "exchange": "FOREX", "name": "USD/CHF"},
-    {"symbol": "EURGBP=X", "exchange": "FOREX", "name": "EUR/GBP"},
-    {"symbol": "GBPJPY=X", "exchange": "FOREX", "name": "GBP/JPY"},
-
-    {"symbol": "NG=F", "exchange": "COMEX", "name": "Natural Gas"},
-    {"symbol": "CL=F", "exchange": "NYMEX", "name": "WTI Crude"},
-    {"symbol": "BZ=F", "exchange": "ICE", "name": "Brent Crude"},
-
-    {"symbol": "CC=F", "exchange": "ICE", "name": "Cocoa (NY)"},
-    {"symbol": "KC=F", "exchange": "ICE", "name": "Coffee"},
-    {"symbol": "SB=F", "exchange": "ICE", "name": "Sugar"},
-    {"symbol": "ZC=F", "exchange": "CBOT", "name": "Corn"},
-    {"symbol": "ZW=F", "exchange": "CBOT", "name": "Wheat"},
-
-    {"symbol": "NVDA", "exchange": "NASDAQ", "name": "NVIDIA (#1 cap)"},
-    {"symbol": "AAPL", "exchange": "NASDAQ", "name": "Apple (#2 cap)"},
-    {"symbol": "GOOGL", "exchange": "NASDAQ", "name": "Alphabet (#3 cap)"},
-    {"symbol": "MSFT", "exchange": "NASDAQ", "name": "Microsoft (#4 cap)"},
-    {"symbol": "AMZN", "exchange": "NASDAQ", "name": "Amazon (#5 cap)"},
-    {"symbol": "2222.SR", "exchange": "TADAWUL", "name": "Saudi Aramco (#6 cap)"},
-    {"symbol": "TSM", "exchange": "NYSE", "name": "TSMC (#7 cap)"},
-    {"symbol": "AVGO", "exchange": "NASDAQ", "name": "Broadcom (#8 cap)"},
-    {"symbol": "META", "exchange": "NASDAQ", "name": "Meta (#9 cap)"},
-    {"symbol": "TSLA", "exchange": "NASDAQ", "name": "Tesla (#10 cap)"}
+    {"symbol": "NG=F", "exchange": "COMEX", "name": "NG (Natural Gas)"},
+    {"symbol": "CL=F", "exchange": "NYMEX", "name": "WTI"},
+    {"symbol": "BZ=F", "exchange": "ICE", "name": "Brent"},
+    {"symbol": "CC=F", "exchange": "ICE", "name": "Cocoa"},
+    {"symbol": "^DJI", "exchange": "INDEX", "name": "US30"},
+    {"symbol": "^GSPC", "exchange": "INDEX", "name": "US500"},
+    {"symbol": "^FTSE", "exchange": "INDEX", "name": "UK100"},
+    {"symbol": "^FCHI", "exchange": "INDEX", "name": "CAC40"},
+    {"symbol": "EURUSD=X", "exchange": "FOREX", "name": "EURUSD"},
+    {"symbol": "EURGBP=X", "exchange": "FOREX", "name": "EURGBP"},
+    {"symbol": "USDCAD=X", "exchange": "FOREX", "name": "USDCAD"},
+    {"symbol": "USDJPY=X", "exchange": "FOREX", "name": "USDJPY"}
   ]
 }
