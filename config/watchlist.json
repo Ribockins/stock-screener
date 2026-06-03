@@ -1,9 +1,10 @@
 {
   "refresh_minutes": 5,
   "timeframe": "60",
+  "timeframes": ["15", "60", "240", "1d"],
   "bars": 120,
   "instruments": [
-    {"symbol": "NG=F", "exchange": "COMEX", "name": "NG (Natural Gas)"},
+    {"symbol": "NG=F", "exchange": "COMEX", "name": "NG"},
     {"symbol": "CL=F", "exchange": "NYMEX", "name": "WTI"},
     {"symbol": "BZ=F", "exchange": "ICE", "name": "Brent"},
     {"symbol": "CC=F", "exchange": "ICE", "name": "Cocoa"},

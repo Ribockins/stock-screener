@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Cloud-only GEM scan — writes human-readable report under reports/."""
+"""Cloud GEM scan — MTF strength, checklist, heatmap-ready report."""
 
 import json
 import sys
@@ -9,7 +9,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+from src.gem.timeframes import TF_SHORT
 from src.gem_platform import GEMPlatform
+from src.gem_strength import strength_badge
+from src.heatmap_data import mtf_rows_to_dataframe
 from src.watchlist import load_watchlist
 
 REPORTS = ROOT / "reports"
@@ -19,19 +22,39 @@ def main():
     REPORTS.mkdir(parents=True, exist_ok=True)
     platform = GEMPlatform()
     wl = load_watchlist()
-    results = platform.scan_watchlist(wl)
-    actionable = platform.priority_signals(results)
+    mtf_scans = platform.scan_watchlist_mtf(wl)
+    df = mtf_rows_to_dataframe(mtf_scans)
 
     ts = datetime.now(timezone.utc)
     stamp = ts.strftime("%Y%m%d_%H%M%S")
 
     payload = {
         "scanned_at_utc": ts.isoformat(),
+        "mode": "mtf",
+        "timeframes": wl.get("timeframes", ["15", "60", "240", "1d"]),
         "symbols_requested": len(wl.get("instruments", [])),
-        "symbols_ok": len(results),
-        "actionable_count": len(actionable),
-        "results": [r.to_dict() for r in results],
+        "symbols_ok": len(mtf_scans),
+        "trade_ready": sum(1 for s in mtf_scans if s.checklist and s.checklist.trade_ok),
+        "instruments": [],
     }
+
+    for scan in mtf_scans:
+        cr = scan.combined_rating
+        payload["instruments"].append(
+            {
+                "symbol": scan.symbol,
+                "display_name": scan.display_name,
+                "combined": cr.__dict__ if cr else {},
+                "checklist": scan.checklist.to_dict() if scan.checklist else {},
+                "timeframes": {
+                    tf: {
+                        "analysis": scan.analyses[tf].to_dict(),
+                        "rating": scan.ratings[tf].__dict__,
+                    }
+                    for tf in scan.ratings
+                },
+            }
+        )
 
     json_path = REPORTS / f"gem_scan_{stamp}.json"
     md_path = REPORTS / "latest_gem_report.md"
@@ -41,61 +64,58 @@ def main():
     json_latest.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
 
     lines = [
-        f"# GEM Logic scan — {ts.strftime('%Y-%m-%d %H:%M UTC')}",
+        f"# GEM Logic scan (4 timeframes) — {ts.strftime('%Y-%m-%d %H:%M UTC')}",
         "",
-        f"Watchlist: **{payload['symbols_ok']}/{payload['symbols_requested']}** symbols | "
-        f"**{payload['actionable_count']}** actionable",
+        f"**{payload['symbols_ok']}/{payload['symbols_requested']}** instruments · "
+        f"**{payload['trade_ready']}** passed trade checklist (≥4/6 + STRONG+)",
+        "",
+        "Timeframes: **15m · 1h · 4h · Daily**",
         "",
     ]
 
-    if actionable:
-        lines.append("## Actionable signals")
+    passed = [s for s in mtf_scans if s.checklist and s.checklist.trade_ok]
+    if passed:
+        lines.append("## Trade checklist passed")
         lines.append("")
-        for r in actionable:
-            tag = ""
-            if r.buy_gem:
-                tag = "**EMERALD GEM**"
-            elif r.sell_gem:
-                tag = "**RUBY GEM**"
-            elif r.buy_entry:
-                tag = "**LONG ENTRY**"
-            elif r.sell_entry:
-                tag = "**SHORT ENTRY**"
-            elif r.buy_setup:
-                tag = "BUY SETUP (3 div)"
-            elif r.sell_setup:
-                tag = "SELL SETUP (3 div)"
-            lines.append(f"- **{r.symbol}** @ ${r.price:.2f} | RSI {r.rsi:.1f} | {tag}")
-            lines.append(f"  - {r.recommendation}")
+        for s in passed:
+            cr = s.combined_rating
+            cl = s.checklist
+            lines.append(
+                f"- **{s.display_name}** — {strength_badge(cr.strength)} **{cr.strength}** "
+                f"({cr.direction}) · {cl.score}/6 · {cr.signal_name}"
+            )
         lines.append("")
     else:
-        lines.append("_No actionable GEM signals on this scan._")
+        lines.append("_No instruments passed the full trade checklist on this scan._")
         lines.append("")
 
-    lines.append("## All symbols")
+    lines.append("## Strength heatmap (by instrument)")
     lines.append("")
-    lines.append("| Symbol | RSI | Signal | Exec | GEM score |")
-    lines.append("|--------|-----|--------|------|-----------|")
-    for r in results:
-        sig = "—"
-        if r.buy_gem:
-            sig = "EMERALD GEM"
-        elif r.sell_gem:
-            sig = "RUBY GEM"
-        elif r.buy_setup:
-            sig = "BUY SETUP"
-        elif r.sell_setup:
-            sig = "SELL SETUP"
-        elif r.in_oversold:
-            sig = "Oversold"
-        elif r.in_overbought:
-            sig = "Overbought"
+    lines.append("| Instrument | M15 | H1 | H4 | D1 | MTF | Check |")
+    lines.append("|------------|-----|----|----|-----|-----|-------|")
+    for _, row in df.iterrows():
+        cols = []
+        for tf in ["M15", "H1", "H4", "D1"]:
+            cols.append(f"{row.get(f'{tf} str', '—')}")
         lines.append(
-            f"| {r.symbol} | {r.rsi:.1f} | {sig} | {r.exec_state} | {r.gem_score} |"
+            f"| **{row['Instrument']}** | {' | '.join(cols)} | "
+            f"{row['MTF badge']} {row['MTF strength']} | {row['Checklist']} |"
         )
+    lines.append("")
+
+    lines.append("## Pre-trade checklist (detail)")
+    lines.append("")
+    for s in mtf_scans:
+        if not s.checklist:
+            continue
+        cl = s.checklist
+        lines.append(f"### {s.display_name} — {cl.summary}")
+        for item in cl.items:
+            mark = "✓" if item.passed else "✗"
+            lines.append(f"- [{mark}] **{item.label}** — {item.detail}")
+        lines.append("")
 
     md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-
     print(md_path.read_text(encoding="utf-8"))
     print(f"\n(JSON: {json_latest})")
 

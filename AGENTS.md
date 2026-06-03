@@ -12,10 +12,10 @@ The VM **update script** refreshes `.venv`, installs platform deps, and `tvdataf
 
 ```bash
 cd /workspace && source .venv/bin/activate
-python scripts/cloud_gem_report.py
+python scripts/cloud_gem_report.py  # 4 TFs: 15m, 1h, 4h, daily + strength + checklist
 ```
 
-Read **`reports/latest_gem_report.md`** and summarize actionable signals (EMERALD GEM, RUBY GEM, setups, entries).
+Read **`reports/latest_gem_report.md`** (MTF strength table + 6-point checklist) and summarize actionable signals (EMERALD GEM, RUBY GEM, setups, entries).
 
 ### Finviz Top Gainers (separate list)
 

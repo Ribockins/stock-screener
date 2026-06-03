@@ -11,5 +11,7 @@ websocket-client>=1.6
 
 # Desktop UI
 PyQt6>=6.6
+streamlit>=1.28
+plotly>=5.16
 
 # tvdatafeed is installed from GitHub in install scripts (not on PyPI)
