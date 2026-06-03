@@ -43,9 +43,23 @@ tmux -f /exec-daemon/tmux.portal.conf new-session -d -s "$SESSION_NAME" -c /work
 
 Default refresh: **5 minutes** (`GEM_REFRESH_MINUTES` env).
 
+
+### GEM My List (compact trade board)
+
+User phrase: **"GEM my list"** (also: **gemlist**, **my list**, **scan**).
+
+Shows: `Instrument | Checklist | MTF | Notes` — trade-ready first, then full watchlist.
+
+```bash
+cd /workspace && source .venv/bin/activate
+python scripts/gem_my_list.py
+```
+
+Same as `cloud_gem_report.py`; report title starts with **GEM My List**.
+
 ### User-facing phrases
 
-- "Scan my watchlist" → `cloud_gem_report.py`
+- **"GEM my list"** / **"gemlist"** / **"scan my instruments"** → `gem_my_list.py` or `cloud_gem_report.py`
 - "Add TSLA" → edit `config/watchlist.json`
 - They do **not** need local install steps
 

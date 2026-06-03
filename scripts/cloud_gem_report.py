@@ -13,6 +13,7 @@ from src.gem.timeframes import TF_SHORT
 from src.gem_platform import GEMPlatform
 from src.gem_strength import strength_badge
 from src.heatmap_data import mtf_rows_to_dataframe
+from src.gem_my_list import PRODUCT_NAME, build_gem_my_list_rows, render_gem_my_list_markdown
 from src.watchlist import load_watchlist
 
 REPORTS = ROOT / "reports"
@@ -63,31 +64,25 @@ def main():
     json_path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
     json_latest.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
 
-    lines = [
-        f"# GEM Logic scan (4 timeframes) — {ts.strftime('%Y-%m-%d %H:%M UTC')}",
-        "",
-        f"**{payload['symbols_ok']}/{payload['symbols_requested']}** instruments · "
-        f"**{payload['trade_ready']}** passed trade checklist (≥4/6 + STRONG+)",
-        "",
-        "Timeframes: **15m · 1h · 4h · Daily**",
-        "",
+    payload["gem_my_list"] = [
+        {"instrument": r[0], "checklist": r[1], "mtf": r[2], "notes": r[3]}
+        for r in build_gem_my_list_rows(mtf_scans)
     ]
 
-    passed = [s for s in mtf_scans if s.checklist and s.checklist.trade_ok]
-    if passed:
-        lines.append("## Trade checklist passed")
+    lines = [
+        f"# {PRODUCT_NAME} — {ts.strftime('%Y-%m-%d %H:%M UTC')}",
+        "",
+        f"**{payload['symbols_ok']}/{payload['symbols_requested']}** instruments · "
+        f"**{payload['trade_ready']}** trade-ready · TFs: **15m · 1h · 4h · Daily**",
+        "",
+    ]
+    lines.extend(render_gem_my_list_markdown(mtf_scans, trade_ready_only=True))
+    if payload["trade_ready"] == 0:
+        lines.append("_No trade-ready rows; see full board below._")
         lines.append("")
-        for s in passed:
-            cr = s.combined_rating
-            cl = s.checklist
-            lines.append(
-                f"- **{s.display_name}** — {strength_badge(cr.strength)} **{cr.strength}** "
-                f"({cr.direction}) · {cl.score}/6 · {cr.signal_name}"
-            )
-        lines.append("")
-    else:
-        lines.append("_No instruments passed the full trade checklist on this scan._")
-        lines.append("")
+    lines.append(f"### Full {PRODUCT_NAME} (all instruments)")
+    lines.append("")
+    lines.extend(render_gem_my_list_markdown(mtf_scans, trade_ready_only=False)[2:])
 
     lines.append("## Strength heatmap (by instrument)")
     lines.append("")
