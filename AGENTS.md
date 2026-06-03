@@ -17,6 +17,18 @@ python scripts/cloud_gem_report.py
 
 Read **`reports/latest_gem_report.md`** and summarize actionable signals (EMERALD GEM, RUBY GEM, setups, entries).
 
+### Finviz Top Gainers (separate list)
+
+- Config: **`config/finviz_gainers.json`** (not mixed with main watchlist)
+- Rank top 10 by market cap + bullish GEM only:
+
+```bash
+cd /workspace && source .venv/bin/activate
+python scripts/finviz_top_cap_gem.py
+```
+
+Read **`reports/finviz_top_cap_gem.md`**.
+
 ### Watchlist
 
 Edit **`config/watchlist.json`** when the user asks to add/remove symbols.
