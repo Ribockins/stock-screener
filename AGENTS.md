@@ -57,6 +57,9 @@ python scripts/gem_my_list.py
 
 Same as `cloud_gem_report.py`; report title starts with **GEM My List**.
 
+Also includes **4 separate score tables**: M15 → H1 → H4 → Daily (all instruments each).
+User may say: **"GEM 4 tables"** or **"scores by timeframe"**.
+
 ### User-facing phrases
 
 - **"GEM my list"** / **"gemlist"** / **"scan my instruments"** → `gem_my_list.py` or `cloud_gem_report.py`

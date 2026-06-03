@@ -23,6 +23,8 @@ from src.heatmap_data import (
     mtf_strength_bar_matrix,
     rsi_heatmap_matrix_mtf,
 )
+from src.gem.timeframes import DEFAULT_TIMEFRAMES, TF_SHORT
+from src.gem_my_list import build_timeframe_table_rows
 from src.watchlist import load_watchlist, watchlist_path
 
 st.set_page_config(
@@ -171,6 +173,28 @@ def main():
     c2.metric("Checklist passed", trade_ok)
     c3.metric("STRONG+ MTF", premium)
     c4.metric("Bear / Bull", f"{len(df[df['MTF score'] < -30])} / {len(df[df['MTF score'] > 30])}")
+
+    st.subheader("Scores by timeframe")
+    tab_labels = [TF_SHORT.get(tf, tf) for tf in DEFAULT_TIMEFRAMES]
+    tabs = st.tabs(tab_labels)
+    for tab, tf in zip(tabs, DEFAULT_TIMEFRAMES):
+        with tab:
+            rows = build_timeframe_table_rows(scans, tf)
+            tf_df = pd.DataFrame(
+                [
+                    {
+                        "Instrument": r[0],
+                        "Score": r[1],
+                        "Strength": r[2],
+                        "Direction": r[3],
+                        "RSI": r[4],
+                        "Signal": r[5],
+                        "Notes": r[6],
+                    }
+                    for r in rows
+                ]
+            )
+            st.dataframe(tf_df, use_container_width=True, hide_index=True)
 
     st.plotly_chart(make_mtf_strength_heatmap(df), use_container_width=True)
     st.plotly_chart(make_mtf_score_bar(df), use_container_width=True)

@@ -13,7 +13,13 @@ from src.gem.timeframes import TF_SHORT
 from src.gem_platform import GEMPlatform
 from src.gem_strength import strength_badge
 from src.heatmap_data import mtf_rows_to_dataframe
-from src.gem_my_list import PRODUCT_NAME, build_gem_my_list_rows, render_gem_my_list_markdown
+from src.gem_my_list import (
+    PRODUCT_NAME,
+    build_gem_my_list_rows,
+    render_gem_my_list_markdown,
+    render_timeframe_tables_markdown,
+    timeframe_tables_payload,
+)
 from src.watchlist import load_watchlist
 
 REPORTS = ROOT / "reports"
@@ -84,7 +90,10 @@ def main():
     lines.append("")
     lines.extend(render_gem_my_list_markdown(mtf_scans, trade_ready_only=False)[2:])
 
-    lines.append("## Strength heatmap (by instrument)")
+    payload["timeframe_tables"] = timeframe_tables_payload(mtf_scans)
+    lines.extend(render_timeframe_tables_markdown(mtf_scans))
+
+    lines.append("## Strength heatmap (compact)")
     lines.append("")
     lines.append("| Instrument | M15 | H1 | H4 | D1 | MTF | Check |")
     lines.append("|------------|-----|----|----|-----|-----|-------|")
