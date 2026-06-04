@@ -38,3 +38,7 @@ Scan → GEM My List → Exec tier → Protocol 10 steps → Trade (you) → Jou
 3. *Best Loser Wins* — качество убытка  
 
 Конспекты: `docs/books/01` … `03`.
+
+## Indicator combos (TOP 10)
+
+See `docs/edge-indicator-combos.md` — **RSI+MFI** = P0 core.
