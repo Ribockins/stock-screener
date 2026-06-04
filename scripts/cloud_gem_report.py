@@ -71,7 +71,7 @@ def main():
     json_latest.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
 
     payload["gem_my_list"] = [
-        {"instrument": r[0], "checklist": r[1], "mtf": r[2], "notes": r[3]}
+        {"instrument": r[0], "checklist": r[1], "mtf": r[2], "exec_tier": r[3], "notes": r[4]}
         for r in build_gem_my_list_rows(mtf_scans)
     ]
 
@@ -119,6 +119,9 @@ def main():
             lines.append(f"- [{mark}] **{item.label}** — {item.detail}")
         lines.append("")
 
+    lines.append("")
+    lines.append("---")
+    lines.append("_Douglas: CONFIRMED = plan · WARNING = candidate · Journal: scripts/signal_journal.py_")
     md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(md_path.read_text(encoding="utf-8"))
     print(f"\n(JSON: {json_latest})")
