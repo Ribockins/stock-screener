@@ -1,52 +1,94 @@
 # EDGE Discipline Protocol
 
-Психологический «firewall» рядом с GEM My List. Основано на **Mark Douglas — Trading in the Zone**.
+Психологический «firewall» рядом с GEM My List.
 
-GEM отвечает: *есть ли статистически разумная ситуация?*  
-Protocol отвечает: *могу ли я исполнить её без эмоций?*
+| Книга | Вклад |
+|-------|--------|
+| **Trading in the Zone** (#1) | Вероятности, серия, CONFIRMED |
+| **The Disciplined Trader** (#2) | Signal ≠ trade, риск до входа, объективность |
+| **Best Loser Wins** (#3) | Good loss / Bad loss, не менять систему после 1–3 лоссов |
+
+GEM = *есть ли edge?* · Protocol = *исполню ли без эмоций?*
 
 ---
 
-## 9 шагов (каждая сделка)
+## 10 шагов (каждая сделка)
 
 | # | Шаг | Действие |
 |---|-----|----------|
-| 1 | Сигнал | Скан / GEM My List — появилась строка |
-| 2 | Score | MTF strength PREMIUM / STRONG+; 4 TF tables |
-| 3 | Направление | Bull / bear согласован со старшим TF |
-| 4 | Tier | **WARNING** → ждать trigger; **CONFIRMED** → можно готовить вход |
-| 5 | Trigger | ARMED → TRIGGERED или закрытие свечи по вашему правилу |
-| 6 | Риск | Stop, TP, % счёта записаны **до** клика |
-| 7 | План | После входа не двигать stop «из страха/жадности» |
-| 8 | Журнал | `python scripts/signal_journal.py` после скана |
-| 9 | Серия | Решения по системе — только на 20+ записях |
+| 1 | Сигнал | GEM My List / scan |
+| 2 | EDGE score | 0–4 из MTF strength (см. таблицу ниже) |
+| 3 | Направление | Согласован с H4/D1 |
+| 4 | Timeframe | 4 tables — не один TF в вакууме |
+| 5 | **Свеча** | Действие на **закрытой** свече H1 (не мигающий live) |
+| 6 | **Exec tier** | WARNING = watch; CONFIRMED = готовить вход |
+| 7 | **Trigger** | ARMED → TRIGGERED / ваше правило |
+| 8 | **Риск** | Entry, SL, TP, invalidation, % — **до** клика |
+| 9 | **План** | Не переносить SL, не revenge size |
+| 10 | **Журнал** | `signal_journal.py` + после сделки `result_r`, `loss_quality` |
+
+Оценка системы — только на **серии** (≥20–50 записей), не на одной сделке.
 
 ---
 
-## Douglas: что запрещено
+## EDGE score 0–4 (из GEM strength)
 
-- Вход только потому что «красивая цифра» в таблице.
-- Увеличение лота после убытка (revenge).
-- Отключение скана после 1–2 лоссов.
-- Смена параметров RSI/GEM после одной сделки.
-- Торговля Finviz gainers вперемешку с «моими 12».
+| Score | GEM tier | Смысл |
+|-------|----------|--------|
+| 0 | NONE | Нет |
+| 1 | WEAK | Слабый warning |
+| 2 | MEDIUM | Кандидат |
+| 3 | STRONG / VERY_STRONG | Сильный warning |
+| 4 | PREMIUM | Premium candidate — вход **с trigger** |
 
----
-
-## Лимиты (шаблон)
-
-См. `config/discipline.json` — настройте под свой счёт и брокера.
+Score **4** ≠ автоматический вход.
 
 ---
 
-## Связь с GEM My List
+## Exec tier (Signal ≠ Trade)
+
+| Tier | Действие |
+|------|----------|
+| **WAIT** | Нет сделки |
+| **WARNING** | Наблюдение / половинный риск |
+| **CONFIRMED** | План по полному риску |
+
+---
+
+## Hougaard: Loss Quality (после сделки)
+
+| Значение | Когда |
+|----------|--------|
+| **good_loss** | Правило соблюдено, SL сработал |
+| **bad_loss** | Ранний вход, widen SL, revenge, no stop |
+| **win** | TP / цель по плану |
+| **execution_error** | Закрыл рано из страха / держал убыток |
+
+> Good loss is part of the system. Bad loss is violation of the system.
+
+---
+
+## Запрещено
+
+- Вход на «красивую цифру» без trigger.
+- Увеличение лота после убытка.
+- Martingale / усреднение.
+- Перенос stop «в надежде».
+- Смена GEM после 1–3 лоссов.
+- Finviz gainers в одном риске с «моими 12».
+
+---
+
+## Лимиты
+
+`config/discipline.json`
+
+---
+
+## GEM My List
 
 | Checklist | Protocol |
 |-----------|----------|
-| 6/6 ✅ + CONFIRMED | Исполнение по плану |
-| 5/6 ⚠️ | WARNING — watchlist, не полный размер |
-| &lt;4/6 | WAIT — нет сделки |
-
----
-
-*Не финансовый совет — правила процесса.*
+| 6/6 ✅ + CONFIRMED | Полный план |
+| 5/6 ⚠️ | WARNING |
+| &lt;4/6 | WAIT |

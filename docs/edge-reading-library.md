@@ -71,7 +71,18 @@
 - **Идея:** разные edge (macro, discretionary, systematic); риск, дисциплина, адаптация.
 - **Для нас:** не один «святой Грааль» — GEM My List = **скринер**, не автоторговля; размер позиции вне кода.
 
-### 13. Douglas — *Trading in the Zone* (см. `docs/books/01-trading-in-the-zone-douglas.md`)
+
+### Психология — конспекты (пользователь)
+
+| # | Книга | Файл |
+|---|--------|------|
+| 1 | Trading in the Zone | `docs/books/01-trading-in-the-zone-douglas.md` |
+| 2 | The Disciplined Trader | `docs/books/02-the-disciplined-trader-douglas.md` |
+| 3 | Best Loser Wins | `docs/books/03-best-loser-wins-hougaard.md` |
+
+Два слоя EDGE: `docs/edge-two-layers.md` · Протокол: `docs/edge-discipline-protocol.md`
+
+### 13–14. Douglas — Zone + Disciplined Trader (см. `docs/books/01`…`02`)
 - **Идея:** вероятностное мышление; план; принятие серии исходов.
 - **Для нас:** чеклист **Trade OK** = «разрешение смотреть сделку», не «обязан войти».
 
