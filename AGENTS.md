@@ -83,3 +83,10 @@ TradingView (limited nologin) → yfinance fallback. Requires network.
 
 - Old screener: `scripts/run_screener.py`
 - Desktop GUI: `gem_app.py` (needs display; not used for Option C)
+
+### EDGE layer (RSI + MFI + volume)
+
+- Code: `src/edge_combos.py` (MFI + RSI/MFI divergence), `src/volume_signals.py`, `src/edge_engine.py`
+- Wired into MTF scan: `GEMPlatform.scan_watchlist_mtf()` fills `InstrumentMTFScan.edge_signals` per TF
+- Reports: **EDGE (H1)** column on GEM My List; per-TF tables show **MFI** and **Edge** (0–4)
+- Tests: `PYTHONPATH=/workspace pytest tests/test_edge_signals.py -v`

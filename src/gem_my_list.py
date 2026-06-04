@@ -13,13 +13,31 @@ from src.gem_strength import strength_badge
 PRODUCT_NAME = "GEM My List"
 ALIASES = ("gemlist", "gemboard", "mylist", "4tables", "bytf")
 
-# Report section titles per timeframe
 TF_TABLE_TITLES: Dict[str, str] = {
     "15": "15 minute (M15)",
     "60": "1 hour (H1)",
     "240": "4 hour (H4)",
     "1d": "Daily (D1)",
 }
+
+
+def _edge_div_tag(edge) -> str:
+    if not edge:
+        return ""
+    if edge.dual_bear_div:
+        return "dual bear div"
+    if edge.dual_bull_div:
+        return "dual bull div"
+    tags = []
+    if edge.rsi_bear_div:
+        tags.append("RSI↓")
+    if edge.rsi_bull_div:
+        tags.append("RSI↑")
+    if edge.mfi_bear_div:
+        tags.append("MFI↓")
+    if edge.mfi_bull_div:
+        tags.append("MFI↑")
+    return " ".join(tags)
 
 
 def _tf_tags(scan: InstrumentMTFScan) -> str:
@@ -41,6 +59,15 @@ def _tf_tags(scan: InstrumentMTFScan) -> str:
     return " + ".join(parts)
 
 
+def format_edge_cell(scan: InstrumentMTFScan, tf: str = "60") -> str:
+    edge = scan.edge_signals.get(tf)
+    if not edge:
+        return "—"
+    div = _edge_div_tag(edge)
+    base = f"MFI {edge.mfi:.0f} · edge {edge.edge_combo_score}/4"
+    return f"{base}" + (f" · {div}" if div else "")
+
+
 def _notes(scan: InstrumentMTFScan) -> str:
     cr = scan.combined_rating
     primary = scan.analyses.get("60") or scan.primary_analysis()
@@ -52,6 +79,10 @@ def _notes(scan: InstrumentMTFScan) -> str:
     tf = _tf_tags(scan)
     if tf:
         bits.append(tf)
+
+    edge = scan.primary_edge()
+    if edge and edge.summary != "no edge":
+        bits.append(edge.summary)
 
     if primary:
         if primary.exec_state in ("ARMED_SHORT", "ARMED_LONG"):
@@ -68,6 +99,13 @@ def _tf_notes(scan: InstrumentMTFScan, tf: str) -> str:
     if not a or not r:
         return "—"
     bits = [r.signal_name]
+    edge = scan.edge_signals.get(tf)
+    if edge:
+        div = _edge_div_tag(edge)
+        if div:
+            bits.append(div)
+        if edge.volume_divergence or edge.volume_exhaustion:
+            bits.append(edge.summary.split(";")[-1].strip())
     if a.exec_state not in ("WAIT",):
         bits.append(a.exec_state.replace("_", " "))
     if a.near_support:
@@ -96,8 +134,8 @@ def build_gem_my_list_rows(
     scans: List[InstrumentMTFScan],
     *,
     trade_ready_only: bool = False,
-) -> List[Tuple[str, str, str, str, str]]:
-    rows: List[Tuple[str, str, str, str, str, int, int]] = []
+) -> List[Tuple[str, str, str, str, str, str]]:
+    rows: List[Tuple[str, str, str, str, str, str, int, int]] = []
     for s in scans:
         if trade_ready_only and not (s.checklist and s.checklist.trade_ok):
             continue
@@ -114,30 +152,31 @@ def build_gem_my_list_rows(
                 s.display_name,
                 format_checklist_cell(s),
                 format_mtf_cell(s),
+                format_edge_cell(s),
                 tier,
                 _notes(s),
                 prio,
                 score,
             )
         )
-    rows.sort(key=lambda r: (r[5], r[6]), reverse=True)
-    return [(r[0], r[1], r[2], r[3], r[4]) for r in rows]
+    rows.sort(key=lambda r: (r[6], r[7]), reverse=True)
+    return [(r[0], r[1], r[2], r[3], r[4], r[5]) for r in rows]
 
 
 def build_timeframe_table_rows(
     scans: List[InstrumentMTFScan],
     tf: str,
-) -> List[Tuple[str, int, str, str, float, str, str]]:
+) -> List[Tuple[str, int, str, str, float, float, int, str, str]]:
     """
-    One timeframe: (instrument, score, strength, direction, rsi, signal, notes).
-    Sorted by |score| descending.
+    Per TF: instrument, score, strength, direction, rsi, mfi, edge_score, signal, notes.
     """
     rows = []
     for s in scans:
         r = s.ratings.get(tf)
         a = s.analyses.get(tf)
+        edge = s.edge_signals.get(tf)
         if not r or not a:
-            rows.append((s.display_name, 0, "NONE", "—", 0.0, "—", "no data"))
+            rows.append((s.display_name, 0, "NONE", "—", 0.0, 0.0, 0, "—", "no data"))
             continue
         rows.append(
             (
@@ -146,6 +185,8 @@ def build_timeframe_table_rows(
                 r.strength,
                 r.direction,
                 round(a.rsi, 1),
+                edge.mfi if edge else 0.0,
+                edge.edge_combo_score if edge else 0,
                 r.signal_name,
                 _tf_notes(s, tf),
             )
@@ -163,50 +204,58 @@ def render_gem_my_list_markdown(
     lines = [
         f"## {heading}",
         "",
-        "| Instrument | Checklist | MTF | Exec | Notes |",
-        "|------------|-----------|-----|------|-------|",
+        "| Instrument | Checklist | MTF | EDGE (H1) | Exec | Notes |",
+        "|------------|-----------|-----|-------------|------|-------|",
     ]
     board = build_gem_my_list_rows(scans, trade_ready_only=trade_ready_only)
     if not board:
-        lines.append("| _none_ | — | — | WAIT | No rows this scan |")
+        lines.append("| _none_ | — | — | — | WAIT | No rows this scan |")
     else:
-        for inst, chk, mtf, ex, notes in board:
-            lines.append(f"| **{inst}** | {chk} | {mtf} | {ex} | {notes} |")
+        for inst, chk, mtf, edge, ex, notes in board:
+            lines.append(f"| **{inst}** | {chk} | {mtf} | {edge} | {ex} | {notes} |")
     lines.append("")
     return lines
 
 
 def render_timeframe_tables_markdown(scans: List[InstrumentMTFScan]) -> List[str]:
-    """Four separate tables — all instruments, scores for one TF each."""
     lines = [
         "## Scores by timeframe",
         "",
-        "_Same 12 instruments on each table; sorted by |score| (strongest bias first)._",
+        "_RSI/MFI divergence + volume (EDGE) on each TF; sorted by |GEM score|._",
         "",
     ]
     for tf in DEFAULT_TIMEFRAMES:
         label = TF_TABLE_TITLES.get(tf, TF_SHORT.get(tf, tf))
         lines.append(f"### {label}")
         lines.append("")
-        lines.append("| Instrument | Score | Strength | Signal | RSI | Notes |")
-        lines.append("|------------|-------|----------|--------|-----|-------|")
-        for inst, score, strength, direction, rsi, signal, notes in build_timeframe_table_rows(
-            scans, tf
-        ):
+        lines.append("| Instrument | Score | Strength | Signal | RSI | MFI | Edge | Notes |")
+        lines.append("|------------|-------|----------|--------|-----|-----|------|-------|")
+        for (
+            inst,
+            score,
+            strength,
+            direction,
+            rsi,
+            mfi,
+            edge_score,
+            signal,
+            notes,
+        ) in build_timeframe_table_rows(scans, tf):
             score_s = f"{score:+d}" if score else "0"
             str_cell = f"{strength_badge(strength)} {strength}"
             if direction in ("BULLISH", "BEARISH"):
                 str_cell += f" {direction.lower()}"
             rsi_s = f"{rsi:.1f}" if rsi else "—"
+            mfi_s = f"{mfi:.0f}" if mfi else "—"
+            edge_s = f"{edge_score}/4" if edge_score else "0/4"
             lines.append(
-                f"| **{inst}** | {score_s} | {str_cell} | {signal} | {rsi_s} | {notes} |"
+                f"| **{inst}** | {score_s} | {str_cell} | {signal} | {rsi_s} | {mfi_s} | {edge_s} | {notes} |"
             )
         lines.append("")
     return lines
 
 
 def timeframe_tables_payload(scans: List[InstrumentMTFScan]) -> Dict[str, list]:
-    """JSON-serializable tables keyed by interval (15, 60, 240, 1d)."""
     out: Dict[str, list] = {}
     for tf in DEFAULT_TIMEFRAMES:
         out[tf] = [
@@ -216,8 +265,10 @@ def timeframe_tables_payload(scans: List[InstrumentMTFScan]) -> Dict[str, list]:
                 "strength": r[2],
                 "direction": r[3],
                 "rsi": r[4],
-                "signal": r[5],
-                "notes": r[6],
+                "mfi": r[5],
+                "edge_combo_score": r[6],
+                "signal": r[7],
+                "notes": r[8],
             }
             for r in build_timeframe_table_rows(scans, tf)
         ]

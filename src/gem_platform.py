@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List, Optional
 
+from src.edge_engine import EdgeBarSignals, analyze_edge_bar
 from src.gem.analyzer import GEMAnalyzer
 from src.gem.config import GEMConfig
 from src.gem.models import GEMAnalysis
@@ -28,11 +29,15 @@ class InstrumentMTFScan:
     display_name: str
     analyses: Dict[str, GEMAnalysis] = field(default_factory=dict)
     ratings: Dict[str, GemStrengthRating] = field(default_factory=dict)
+    edge_signals: Dict[str, EdgeBarSignals] = field(default_factory=dict)
     combined_rating: Optional[GemStrengthRating] = None
     checklist: Optional[ScanChecklist] = None
 
     def primary_analysis(self) -> Optional[GEMAnalysis]:
         return self.analyses.get("60") or next(iter(self.analyses.values()), None)
+
+    def primary_edge(self) -> Optional[EdgeBarSignals]:
+        return self.edge_signals.get("60") or next(iter(self.edge_signals.values()), None)
 
 
 class GEMPlatform:
@@ -108,6 +113,13 @@ class GEMPlatform:
                 if analysis:
                     row.analyses[tf] = analysis
                     row.ratings[tf] = rate_gem_analysis(analysis, tf)
+                    edge = analyze_edge_bar(
+                        df,
+                        rsi_period=self.gem_config.rsi_length,
+                        mfi_period=self.gem_config.rsi_length,
+                    )
+                    if edge:
+                        row.edge_signals[tf] = edge
 
             if row.ratings:
                 row.combined_rating = combine_mtf_ratings(list(row.ratings.values()))
@@ -142,4 +154,3 @@ class GEMPlatform:
             or r.buy_entry
             or r.sell_entry
         ]
-

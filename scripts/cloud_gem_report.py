@@ -9,7 +9,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.gem.timeframes import TF_SHORT
 from src.gem_platform import GEMPlatform
 from src.gem_strength import strength_badge
 from src.heatmap_data import mtf_rows_to_dataframe
@@ -57,6 +56,9 @@ def main():
                     tf: {
                         "analysis": scan.analyses[tf].to_dict(),
                         "rating": scan.ratings[tf].__dict__,
+                        "edge": scan.edge_signals[tf].to_dict()
+                        if tf in scan.edge_signals
+                        else {},
                     }
                     for tf in scan.ratings
                 },
@@ -71,7 +73,14 @@ def main():
     json_latest.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
 
     payload["gem_my_list"] = [
-        {"instrument": r[0], "checklist": r[1], "mtf": r[2], "exec_tier": r[3], "notes": r[4]}
+        {
+            "instrument": r[0],
+            "checklist": r[1],
+            "mtf": r[2],
+            "edge_h1": r[3],
+            "exec_tier": r[4],
+            "notes": r[5],
+        }
         for r in build_gem_my_list_rows(mtf_scans)
     ]
 
@@ -79,7 +88,8 @@ def main():
         f"# {PRODUCT_NAME} — {ts.strftime('%Y-%m-%d %H:%M UTC')}",
         "",
         f"**{payload['symbols_ok']}/{payload['symbols_requested']}** instruments · "
-        f"**{payload['trade_ready']}** trade-ready · TFs: **15m · 1h · 4h · Daily**",
+        f"**{payload['trade_ready']}** trade-ready · TFs: **15m · 1h · 4h · Daily** · "
+        f"**EDGE:** RSI + MFI divergence + volume",
         "",
     ]
     lines.extend(render_gem_my_list_markdown(mtf_scans, trade_ready_only=True))
@@ -117,6 +127,9 @@ def main():
         for item in cl.items:
             mark = "✓" if item.passed else "✗"
             lines.append(f"- [{mark}] **{item.label}** — {item.detail}")
+        edge = s.primary_edge()
+        if edge:
+            lines.append(f"- EDGE (H1): **{edge.summary}** (score {edge.edge_combo_score}/4)")
         lines.append("")
 
     lines.append("")
