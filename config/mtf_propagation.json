@@ -1,0 +1,39 @@
+{
+  "description": "MTF Propagation — will M15 warning expand to H1/H4?",
+  "source_tf": "15",
+  "target_tfs": ["60", "240", "1d"],
+  "weights": {
+    "rsi_div_m15": 1,
+    "mfi_div_m15": 2,
+    "obv_div_m15": 2,
+    "cvd_div_m15": 3,
+    "at_higher_tf_level": 2,
+    "h1_weakness_align": 2,
+    "h4_overstretched": 2,
+    "squeeze_compression": 1,
+    "volume_rejection": 2
+  },
+  "bands": {
+    "local_noise_max": 3,
+    "watch_max": 6,
+    "expansion_min": 7
+  },
+  "transfer_strength_rank": [
+    "CVD",
+    "OBV",
+    "MFI",
+    "VolumeProfile",
+    "VWAP",
+    "Squeeze",
+    "MarketBreadth",
+    "OpenInterestFunding",
+    "MACDHistogram",
+    "ADXWeakening",
+    "RSI"
+  ],
+  "best_pairs_for_propagation": {
+    "default": ["MFI", "OBV"],
+    "crypto_futures": ["CVD", "OpenInterest"],
+    "full_stack": ["CVD", "MFI", "OBV", "HTF_Level"]
+  }
+}
