@@ -66,6 +66,10 @@ User may say: **"GEM 4 tables"** or **"scores by timeframe"**.
 - "Add TSLA" → edit `config/watchlist.json`
 - They do **not** need local install steps
 
+### Strategy library (100 books → EDGE)
+
+Konспект по названиям: **`docs/edge-reading-library.md`** (топ-15, MTF, VPA, чеклист).
+
 ### GEM engine
 
 - Code: `src/gem/` + `src/gem_platform.py`
