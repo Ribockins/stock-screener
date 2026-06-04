@@ -6,6 +6,7 @@ from typing import Dict, List, Tuple
 
 from src.gem.timeframes import DEFAULT_TIMEFRAMES, TF_SHORT
 from src.gem_platform import InstrumentMTFScan
+from src.execution_tier import TIER_WAIT, execution_tier, tier_label
 from src.gem_strength import strength_badge
 
 
@@ -95,26 +96,32 @@ def build_gem_my_list_rows(
     scans: List[InstrumentMTFScan],
     *,
     trade_ready_only: bool = False,
-) -> List[Tuple[str, str, str, str]]:
-    rows: List[Tuple[str, str, str, str, int, int]] = []
+) -> List[Tuple[str, str, str, str, str]]:
+    rows: List[Tuple[str, str, str, str, str, int, int]] = []
     for s in scans:
         if trade_ready_only and not (s.checklist and s.checklist.trade_ok):
             continue
         cr = s.combined_rating
         score = abs(cr.score) if cr else 0
         prio = 1 if s.checklist and s.checklist.trade_ok else 0
+        primary = s.analyses.get("60") or s.primary_analysis()
+        rating = s.combined_rating
+        tier = tier_label(
+            execution_tier(primary, rating, s.checklist) if primary and rating else TIER_WAIT
+        )
         rows.append(
             (
                 s.display_name,
                 format_checklist_cell(s),
                 format_mtf_cell(s),
+                tier,
                 _notes(s),
                 prio,
                 score,
             )
         )
-    rows.sort(key=lambda r: (r[4], r[5]), reverse=True)
-    return [(r[0], r[1], r[2], r[3]) for r in rows]
+    rows.sort(key=lambda r: (r[5], r[6]), reverse=True)
+    return [(r[0], r[1], r[2], r[3], r[4]) for r in rows]
 
 
 def build_timeframe_table_rows(
@@ -156,15 +163,15 @@ def render_gem_my_list_markdown(
     lines = [
         f"## {heading}",
         "",
-        "| Instrument | Checklist | MTF | Notes |",
-        "|------------|-----------|-----|-------|",
+        "| Instrument | Checklist | MTF | Exec | Notes |",
+        "|------------|-----------|-----|------|-------|",
     ]
     board = build_gem_my_list_rows(scans, trade_ready_only=trade_ready_only)
     if not board:
-        lines.append("| _none_ | — | — | No rows this scan |")
+        lines.append("| _none_ | — | — | WAIT | No rows this scan |")
     else:
-        for inst, chk, mtf, notes in board:
-            lines.append(f"| **{inst}** | {chk} | {mtf} | {notes} |")
+        for inst, chk, mtf, ex, notes in board:
+            lines.append(f"| **{inst}** | {chk} | {mtf} | {ex} | {notes} |")
     lines.append("")
     return lines
 

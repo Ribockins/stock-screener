@@ -18,6 +18,13 @@
 
 ---
 
+
+## Книга 1 — Douglas (развёрнуто)
+
+Полный конспект и внедрение: **`docs/books/01-trading-in-the-zone-douglas.md`**  
+Протокол исполнения: **`docs/edge-discipline-protocol.md`**  
+Журнал: **`data/signal_journal.csv`** (`python scripts/signal_journal.py`)
+
 ## Топ-15 для EDGE (приоритет пользователя)
 
 ### 1. Schwager — *A Complete Guide to the Futures Market*
@@ -64,7 +71,7 @@
 - **Идея:** разные edge (macro, discretionary, systematic); риск, дисциплина, адаптация.
 - **Для нас:** не один «святой Грааль» — GEM My List = **скринер**, не автоторговля; размер позиции вне кода.
 
-### 13. Douglas — *Trading in the Zone*
+### 13. Douglas — *Trading in the Zone* (см. `docs/books/01-trading-in-the-zone-douglas.md`)
 - **Идея:** вероятностное мышление; план; принятие серии исходов.
 - **Для нас:** чеклист **Trade OK** = «разрешение смотреть сделку», не «обязан войти».
 

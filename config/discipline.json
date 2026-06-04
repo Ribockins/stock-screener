@@ -1,0 +1,11 @@
+{
+  "description": "EDGE Discipline Protocol limits (Mark Douglas). Adjust to your account.",
+  "max_trades_per_day": 4,
+  "max_losses_per_day": 3,
+  "pause_after_consecutive_losses": 2,
+  "no_increase_size_after_loss": true,
+  "no_system_changes_until_journal_trades": 20,
+  "require_confirmed_tier_for_full_size": true,
+  "warning_tier_max_risk_fraction": 0.5,
+  "notes": "CONFIRMED = full plan; WARNING = half size or watch only; WAIT = no trade"
+}

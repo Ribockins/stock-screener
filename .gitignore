@@ -17,3 +17,6 @@ stock_screener.log
 # Generated cloud reports
 reports/*.json
 reports/*.md
+
+# Journal data
+signal_journal.csv
