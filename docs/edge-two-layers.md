@@ -42,3 +42,7 @@ Scan → GEM My List → Exec tier → Protocol 10 steps → Trade (you) → Jou
 ## Indicator combos (TOP 10)
 
 See `docs/edge-indicator-combos.md` — **RSI+MFI** = P0 core.
+
+## Leading vs confirming
+
+`docs/edge-indicator-types.md` — три слоя EDGE (leading / context / confirming).

@@ -124,6 +124,10 @@ Trend + топливо: MFI падает при ещё bullish ST → преду
 
 ---
 
+## Типы сигналов
+
+См. `docs/edge-indicator-types.md` (confirming vs leading div).
+
 ## Связь с GEM My List (сейчас vs план)
 
 | Сейчас (GEM 1.5) | План EDGE 2.0 |
