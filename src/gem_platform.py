@@ -18,6 +18,8 @@ from src.gem_strength import (
 )
 from src.market_data import MarketDataService
 from src.scan_checklist import ScanChecklist, build_combined_checklist
+from src.sme.models import SMELiveScore
+from src.sme.scorer import score_signal_memory
 from src.watchlist import load_watchlist
 
 logger = logging.getLogger(__name__)
@@ -30,6 +32,7 @@ class InstrumentMTFScan:
     analyses: Dict[str, GEMAnalysis] = field(default_factory=dict)
     ratings: Dict[str, GemStrengthRating] = field(default_factory=dict)
     edge_signals: Dict[str, EdgeBarSignals] = field(default_factory=dict)
+    sme_scores: Dict[str, SMELiveScore] = field(default_factory=dict)
     combined_rating: Optional[GemStrengthRating] = None
     checklist: Optional[ScanChecklist] = None
 
@@ -38,6 +41,9 @@ class InstrumentMTFScan:
 
     def primary_edge(self) -> Optional[EdgeBarSignals]:
         return self.edge_signals.get("60") or next(iter(self.edge_signals.values()), None)
+
+    def primary_sme(self) -> Optional[SMELiveScore]:
+        return self.sme_scores.get("60") or next(iter(self.sme_scores.values()), None)
 
 
 class GEMPlatform:
@@ -120,6 +126,14 @@ class GEMPlatform:
                     )
                     if edge:
                         row.edge_signals[tf] = edge
+                    combo = edge.edge_combo_score if edge else 0
+                    row.sme_scores[tf] = score_signal_memory(
+                        df,
+                        analysis,
+                        instrument_name=name,
+                        timeframe=tf,
+                        edge_combo_score=combo,
+                    )
 
             if row.ratings:
                 row.combined_rating = combine_mtf_ratings(list(row.ratings.values()))
@@ -133,7 +147,9 @@ class GEMPlatform:
         self.last_scan_at = datetime.utcnow()
         rows.sort(
             key=lambda r: (
+                r.checklist.trade_ok if r.checklist else False,
                 STRENGTH_RANK.get(r.combined_rating.strength if r.combined_rating else "NONE", 0),
+                (r.primary_sme().edge_plus if r.primary_sme() else 0),
                 abs(r.combined_rating.score if r.combined_rating else 0),
             ),
             reverse=True,
