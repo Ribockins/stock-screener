@@ -1,11 +1,26 @@
 {
-  "description": "EDGE Discipline Protocol limits (Mark Douglas). Adjust to your account.",
+  "description": "Behavioural EDGE — Douglas (#1–2) + Hougaard (#3). Adjust to your account.",
   "max_trades_per_day": 4,
   "max_losses_per_day": 3,
   "pause_after_consecutive_losses": 2,
+  "stop_trading_after_n_losses_per_day": 3,
   "no_increase_size_after_loss": true,
-  "no_system_changes_until_journal_trades": 20,
+  "no_martingale": true,
+  "no_averaging_down": true,
+  "no_widen_stop": true,
+  "one_trade_per_signal": true,
+  "use_closed_candle_only": true,
+  "no_system_changes_until_journal_trades": 30,
+  "min_signals_before_code_change": 50,
   "require_confirmed_tier_for_full_size": true,
   "warning_tier_max_risk_fraction": 0.5,
-  "notes": "CONFIRMED = full plan; WARNING = half size or watch only; WAIT = no trade"
+  "loss_quality_values": ["good_loss", "bad_loss", "win", "execution_error", "none"],
+  "edge_score_meaning": {
+    "0": "no edge",
+    "1": "weak warning",
+    "2": "candidate",
+    "3": "strong warning",
+    "4": "premium candidate — needs trigger"
+  },
+  "notes": "CONFIRMED = full plan; WARNING = half size or watch; GEM scan uses last closed H1 bar"
 }

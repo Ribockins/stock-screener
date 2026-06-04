@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Append GEM scan rows to signal journal (Douglas: evaluate series, not one trade)."""
+"""
+Append GEM scan rows to signal journal.
+
+Douglas: evaluate series, not one trade.
+Hougaard: fill result_r and loss_quality after the trade.
+"""
 
 import csv
 import json
@@ -10,6 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+from src.edge_score import edge_score_from_strength
 from src.execution_tier import execution_tier, tier_label
 from src.gem_platform import GEMPlatform
 from src.watchlist import load_watchlist
@@ -22,6 +28,12 @@ FIELDS = [
     "instrument",
     "symbol",
     "tf_primary",
+    "edge_score",
+    "edge_plus",
+    "svi_weight",
+    "spc",
+    "sse_active",
+    "sme_summary",
     "mtf_strength",
     "mtf_score",
     "direction",
@@ -31,7 +43,11 @@ FIELDS = [
     "signal_name",
     "rsi_h1",
     "exec_state",
+    "entry_trigger",
+    "candle_closed",
     "result_r",
+    "loss_quality",
+    "mistake",
     "notes",
 ]
 
@@ -46,6 +62,7 @@ def append_from_mtf_scans(scans, source: str = "live_scan"):
         primary = s.analyses.get("60") or s.primary_analysis()
         cr = s.combined_rating
         cl = s.checklist
+        sme = s.sme_scores.get("60") or s.primary_sme()
         if not primary or not cr:
             continue
         tier = tier_label(execution_tier(primary, cr, cl))
@@ -55,6 +72,12 @@ def append_from_mtf_scans(scans, source: str = "live_scan"):
                 "instrument": s.display_name,
                 "symbol": s.symbol,
                 "tf_primary": "H1",
+                "edge_score": edge_score_from_strength(cr.strength),
+                "edge_plus": sme.edge_plus if sme else "",
+                "svi_weight": sme.svi_weight if sme else "",
+                "spc": sme.spc if sme else "",
+                "sse_active": sme.sse_active if sme else "",
+                "sme_summary": sme.src_summary if sme else "",
                 "mtf_strength": cr.strength,
                 "mtf_score": cr.score,
                 "direction": cr.direction,
@@ -64,7 +87,11 @@ def append_from_mtf_scans(scans, source: str = "live_scan"):
                 "signal_name": cr.signal_name,
                 "rsi_h1": round(primary.rsi, 2),
                 "exec_state": primary.exec_state,
+                "entry_trigger": "",
+                "candle_closed": "yes",
                 "result_r": "",
+                "loss_quality": "",
+                "mistake": "",
                 "notes": source,
             }
         )
@@ -80,8 +107,8 @@ def append_from_mtf_scans(scans, source: str = "live_scan"):
 def main():
     if SCAN_JSON.exists() and "--from-last-json" in sys.argv:
         data = json.loads(SCAN_JSON.read_text(encoding="utf-8"))
-        print(f"Journal: snapshot already in {SCAN_JSON} ({data.get('scanned_at_utc')})")
-        print("Run full scan to append fresh rows, or use default (scan + append).")
+        print(f"Snapshot: {SCAN_JSON} ({data.get('scanned_at_utc')})")
+        print("Run without --from-last-json to scan and append.")
         return
 
     platform = GEMPlatform()
@@ -89,7 +116,11 @@ def main():
     scans = platform.scan_watchlist_mtf(wl)
     n = append_from_mtf_scans(scans)
     print(f"Appended {n} rows to {JOURNAL}")
-    print("Fill column result_r manually after trades (+1.5R / -1R).")
+    print("After trades, edit CSV:")
+    print("  entry_trigger: Yes/No")
+    print("  result_r: +1.5R / -1R")
+    print("  loss_quality: good_loss | bad_loss | win | execution_error")
+    print("  mistake: none | early_entry | widen_sl | revenge | fear_exit")
 
 
 if __name__ == "__main__":

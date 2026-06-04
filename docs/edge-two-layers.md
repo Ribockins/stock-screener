@@ -46,3 +46,7 @@ See `docs/edge-indicator-combos.md` — **RSI+MFI** = P0 core.
 ## Leading vs confirming
 
 `docs/edge-indicator-types.md` — три слоя EDGE (leading / context / confirming).
+
+## Layer 1b — MTF Propagation
+
+See .

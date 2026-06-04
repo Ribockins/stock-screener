@@ -2,14 +2,14 @@
 """Cloud GEM scan — MTF strength, checklist, SME memory, heatmap-ready report."""
 
 import json
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import List, Optional
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))
+REPORTS = ROOT / "reports"
 
-from src.gem_platform import GEMPlatform
+from src.gem_platform import GEMPlatform, InstrumentMTFScan
 from src.heatmap_data import mtf_rows_to_dataframe
 from src.gem_my_list import (
     PRODUCT_NAME,
@@ -21,16 +21,16 @@ from src.gem_my_list import (
 )
 from src.watchlist import load_watchlist
 
-REPORTS = ROOT / "reports"
 
-
-def main():
+def build_and_write_report(
+    mtf_scans: List[InstrumentMTFScan],
+    wl: dict,
+    *,
+    print_output: bool = True,
+) -> Path:
+    """Write latest_gem_report.md and latest_gem_scan.json from existing scans."""
     REPORTS.mkdir(parents=True, exist_ok=True)
-    platform = GEMPlatform()
-    wl = load_watchlist()
-    mtf_scans = platform.scan_watchlist_mtf(wl)
     df = mtf_rows_to_dataframe(mtf_scans)
-
     ts = datetime.now(timezone.utc)
     stamp = ts.strftime("%Y%m%d_%H%M%S")
 
@@ -140,12 +140,28 @@ def main():
         lines.append("")
 
     lines.append("---")
-    lines.append("_SME v1: live memory from recent bars; SVI from IRP seed until ledger stats mature._")
+    lines.append(
+        "_Data: `data/signal_ledger.csv` (all TFs) · `data/signal_journal.csv` (H1 discipline)._"
+    )
     md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     json_latest.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
-    print(md_path.read_text(encoding="utf-8"))
-    print(f"\n(JSON: {json_latest})")
+
+    if print_output:
+        print(md_path.read_text(encoding="utf-8"))
+        print(f"\n(JSON: {json_latest})")
+    return md_path
+
+
+def main(mtf_scans: Optional[List[InstrumentMTFScan]] = None):
+    wl = load_watchlist()
+    if mtf_scans is None:
+        platform = GEMPlatform()
+        mtf_scans = platform.scan_watchlist_mtf(wl)
+    build_and_write_report(mtf_scans, wl)
 
 
 if __name__ == "__main__":
+    import sys
+
+    sys.path.insert(0, str(ROOT))
     main()

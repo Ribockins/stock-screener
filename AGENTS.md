@@ -90,3 +90,14 @@ TradingView (limited nologin) → yfinance fallback. Requires network.
 - Wired into MTF scan: `GEMPlatform.scan_watchlist_mtf()` fills `InstrumentMTFScan.edge_signals` per TF
 - Reports: **EDGE (H1)** column on GEM My List; per-TF tables show **MFI** and **Edge** (0–4)
 - Tests: `PYTHONPATH=/workspace pytest tests/test_edge_signals.py -v`
+
+### Full scan pipeline (recommended)
+
+```bash
+cd /workspace && source .venv/bin/activate
+PYTHONPATH=/workspace python scripts/gem_scan_pipeline.py
+```
+
+Does in one pass: **live MTF scan** → `data/signal_journal.csv` → `data/signal_ledger.csv` → `reports/latest_gem_report.md`.
+
+CSV data stays on the machine (see `data/.gitignore`); code/config is on GitHub.
