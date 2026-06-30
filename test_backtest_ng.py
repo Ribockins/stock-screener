@@ -150,6 +150,34 @@ def build_signal_record(
     )
 
 
+def append_signal(
+    signals: List[BacktestSignal],
+    data: pd.DataFrame,
+    index: int,
+    timestamp: pd.Timestamp,
+    entry_price: float,
+    divergence: Divergence,
+    direction: str,
+    signal_strength: str,
+    rsi_value: float,
+    confidence: float,
+) -> None:
+    """Evaluate and append one signal record."""
+    evaluation = evaluate_signal(data, index, direction)
+    signals.append(
+        build_signal_record(
+            timestamp=timestamp,
+            entry_price=entry_price,
+            divergence=divergence,
+            direction=direction,
+            signal_strength=signal_strength,
+            rsi_value=rsi_value,
+            confidence=confidence,
+            evaluation=evaluation,
+        )
+    )
+
+
 def backtest_ng() -> Dict[str, object]:
     """Run the backtest and return a JSON-serializable report."""
     data = fetch_ng_data()
@@ -185,33 +213,31 @@ def backtest_ng() -> Dict[str, object]:
         rsi_value = float(rsi.dropna().iloc[-1])
 
         if current_bullish is not None:
-            evaluation = evaluate_signal(data, index, "UP")
-            signals.append(
-                build_signal_record(
-                    timestamp=current_timestamp,
-                    entry_price=entry_price,
-                    divergence=current_bullish,
-                    direction="UP",
-                    signal_strength=signal_analysis.signal_strength,
-                    rsi_value=rsi_value,
-                    confidence=signal_analysis.confidence,
-                    evaluation=evaluation,
-                )
+            append_signal(
+                signals=signals,
+                data=data,
+                index=index,
+                timestamp=current_timestamp,
+                entry_price=entry_price,
+                divergence=current_bullish,
+                direction="UP",
+                signal_strength=signal_analysis.signal_strength,
+                rsi_value=rsi_value,
+                confidence=signal_analysis.confidence,
             )
 
         if current_bearish is not None:
-            evaluation = evaluate_signal(data, index, "DOWN")
-            signals.append(
-                build_signal_record(
-                    timestamp=current_timestamp,
-                    entry_price=entry_price,
-                    divergence=current_bearish,
-                    direction="DOWN",
-                    signal_strength=signal_analysis.signal_strength,
-                    rsi_value=rsi_value,
-                    confidence=signal_analysis.confidence,
-                    evaluation=evaluation,
-                )
+            append_signal(
+                signals=signals,
+                data=data,
+                index=index,
+                timestamp=current_timestamp,
+                entry_price=entry_price,
+                divergence=current_bearish,
+                direction="DOWN",
+                signal_strength=signal_analysis.signal_strength,
+                rsi_value=rsi_value,
+                confidence=signal_analysis.confidence,
             )
 
     signal_dicts = [asdict(signal) for signal in signals]
@@ -220,7 +246,10 @@ def backtest_ng() -> Dict[str, object]:
     average_profit = round(
         sum(signal["profit_loss_points"] for signal in signal_dicts) / total_signals, 4
     ) if total_signals else 0.0
-    win_rate = round((len(winning_signals) / total_signals) * 100, 2) if total_signals else 0.0
+    if total_signals:
+        win_rate = round((len(winning_signals) / total_signals) * 100, 2)
+    else:
+        win_rate = 0.0
     best_signal = max(signal_dicts, key=lambda signal: signal["profit_loss_points"], default=None)
     worst_signal = min(signal_dicts, key=lambda signal: signal["profit_loss_points"], default=None)
 
