@@ -9,6 +9,12 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
+RECENT_REJECTION_PENALTY = 12
+MIN_FACTORS_THRESHOLD = 5
+LOW_FACTORS_PENALTY = 8
+PREMIUM_SCORE_THRESHOLD = 70
+MIN_PREMIUM_RISK_REWARD = 1.2
+
 
 @dataclass
 class SignalStrength:
@@ -630,19 +636,19 @@ class SignalStrengthAnalyzer:
         elif risk_reward_ratio >= 1.2:
             score += 4
         if recent_rejection:
-            score -= 12
-        if factors < 5:
-            score -= 8
+            score -= RECENT_REJECTION_PENALTY
+        if factors < MIN_FACTORS_THRESHOLD:
+            score -= LOW_FACTORS_PENALTY
 
         quality_score = int(max(0, min(100, round(score))))
         premium_entry = (
-            quality_score >= 70
+            quality_score >= PREMIUM_SCORE_THRESHOLD
             and rsi_div
             and volume_spike
             and mtf_alignment
             and adx_filter
             and volatility_ok
-            and risk_reward_ratio >= 1.2
+            and risk_reward_ratio >= MIN_PREMIUM_RISK_REWARD
             and not recent_rejection
         )
 
@@ -654,7 +660,7 @@ class SignalStrengthAnalyzer:
             signal = "MEDIUM"
             confidence = 0.55
             rec = "Monitor closely - filters are still incomplete"
-        elif quality_score < 70:
+        elif quality_score < PREMIUM_SCORE_THRESHOLD:
             signal = "STRONG"
             confidence = 0.7
             rec = "Strong setup forming - wait for extra confluence"
