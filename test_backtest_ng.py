@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import pandas as pd
 import yfinance as yf
@@ -91,7 +91,7 @@ def select_current_divergence(divergences: List[Divergence], timestamp: pd.Times
     return max(matches, key=lambda div: (STRENGTH_RANK.get(div.strength, -1), -div.bars_between))
 
 
-def evaluate_signal(data: pd.DataFrame, index: int, direction: str) -> Dict[str, float | bool]:
+def evaluate_signal(data: pd.DataFrame, index: int, direction: str) -> Dict[str, Union[float, bool]]:
     """Evaluate signal performance over the next 24 hourly candles."""
     future_window = data.iloc[index + 1:index + 1 + EVALUATION_HOURS]
     if len(future_window) != EVALUATION_HOURS:
@@ -128,7 +128,7 @@ def build_signal_record(
     signal_strength: str,
     rsi_value: float,
     confidence: float,
-    evaluation: Dict[str, float | bool],
+    evaluation: Dict[str, Union[float, bool]],
 ) -> BacktestSignal:
     """Build a serializable signal record."""
     return BacktestSignal(
@@ -220,6 +220,9 @@ def backtest_ng() -> Dict[str, object]:
     average_profit = round(
         sum(signal["profit_loss_points"] for signal in signal_dicts) / total_signals, 4
     ) if total_signals else 0.0
+    win_rate = round((len(winning_signals) / total_signals) * 100, 2) if total_signals else 0.0
+    best_signal = max(signal_dicts, key=lambda signal: signal["profit_loss_points"], default=None)
+    worst_signal = min(signal_dicts, key=lambda signal: signal["profit_loss_points"], default=None)
 
     report = {
         "symbol": SYMBOL,
@@ -229,10 +232,10 @@ def backtest_ng() -> Dict[str, object]:
         "generated_at": pd.Timestamp.utcnow().isoformat(),
         "statistics": {
             "total_signals_found": total_signals,
-            "win_rate_percent": round((len(winning_signals) / total_signals) * 100, 2) if total_signals else 0.0,
+            "win_rate_percent": win_rate,
             "average_profit_per_signal_points": average_profit,
-            "best_signal": max(signal_dicts, key=lambda signal: signal["profit_loss_points"], default=None),
-            "worst_signal": min(signal_dicts, key=lambda signal: signal["profit_loss_points"], default=None),
+            "best_signal": best_signal,
+            "worst_signal": worst_signal,
         },
         "signals": signal_dicts,
     }
@@ -271,8 +274,11 @@ def print_report(report: Dict[str, object]) -> None:
         )
 
     print("-" * 120)
-    print("Best signal:", stats["best_signal"])
-    print("Worst signal:", stats["worst_signal"])
+    if stats["best_signal"] is None:
+        print("No completed signals to rank.")
+    else:
+        print("Best signal:", stats["best_signal"])
+        print("Worst signal:", stats["worst_signal"])
 
 
 def main() -> None:
