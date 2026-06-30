@@ -126,7 +126,13 @@ class StockScreener:
                 return None
             
             # SIGNAL STRENGTH ANALYSIS (NEW!)
-            signal_analysis = self.signal_analyzer.analyze(symbol, close_prices, rsi, volume)
+            signal_analysis = self.signal_analyzer.analyze(
+                symbol,
+                close_prices,
+                rsi,
+                volume,
+                market_data=data.reset_index(drop=True)
+            )
             
             if signal_analysis is None:
                 logger.warning(f"Skipping {symbol}: Signal strength analysis failed")
@@ -144,14 +150,17 @@ class StockScreener:
                 'rsi': round(current_rsi, 2),
                 'rsi_signal': rsi_signal,
                 'rsi_divergence': signal_analysis.rsi_divergence,
+                'divergence_bias': signal_analysis.divergence_bias,
                 
                 # MACD metrics
                 'macd_histogram': signal_analysis.macd_histogram,
                 'macd_weakening': signal_analysis.macd_weakening,
                 'macd_divergence': signal_analysis.macd_divergence,
+                'macd_divergence_bias': signal_analysis.macd_divergence_bias,
                 
                 # Volume metrics
                 'volume_divergence': signal_analysis.volume_divergence,
+                'volume_spike': signal_analysis.volume_spike,
                 
                 # Key level metrics
                 'key_level_nearby': signal_analysis.key_level_nearby,
@@ -171,7 +180,18 @@ class StockScreener:
                 'signal_strength': signal_analysis.signal_strength,
                 'confidence': signal_analysis.confidence,
                 'factors_count': signal_analysis.factors_count,
-                'recommendation': signal_analysis.recommendation
+                'recommendation': signal_analysis.recommendation,
+                'quality_score': signal_analysis.quality_score,
+                'premium_entry': signal_analysis.premium_entry,
+                'zone_confirmed': signal_analysis.zone_confirmed,
+                'rebound_confirmed': signal_analysis.rebound_confirmed,
+                'mtf_alignment': signal_analysis.mtf_alignment,
+                'adx_value': signal_analysis.adx_value,
+                'adx_filter': signal_analysis.adx_filter,
+                'volatility_ok': signal_analysis.volatility_ok,
+                'recent_rejection': signal_analysis.recent_rejection,
+                'recent_swing_distance': signal_analysis.recent_swing_distance,
+                'risk_reward_ratio': signal_analysis.risk_reward_ratio
             }
             
             logger.info(

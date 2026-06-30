@@ -130,8 +130,8 @@ class NGBacktester:
         
         # Загружаем данные
         df = self.download_ng_data(days=30)
-        if df is None:
-            print("❌ Не удалось загрузить данные!")
+        if df is None or df.empty:
+            print("❌ Не удалось загрузить данные или данные пустые!")
             return
         
         print(f"📊 Данные: {df.index[0]} → {df.index[-1]}")
