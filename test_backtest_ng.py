@@ -88,12 +88,15 @@ def select_current_divergence(divergences: List[Divergence], timestamp: pd.Times
     if not matches:
         return None
 
-    return max(matches, key=lambda div: (STRENGTH_RANK.get(div.strength, -1), div.bars_between))
+    return max(matches, key=lambda div: (STRENGTH_RANK.get(div.strength, -1), -div.bars_between))
 
 
 def evaluate_signal(data: pd.DataFrame, index: int, direction: str) -> Dict[str, float | bool]:
     """Evaluate signal performance over the next 24 hourly candles."""
     future_window = data.iloc[index + 1:index + 1 + EVALUATION_HOURS]
+    if len(future_window) != EVALUATION_HOURS:
+        raise ValueError("Incomplete evaluation window for signal backtest")
+
     entry_price = float(data["close"].iloc[index])
     close_after_24h = float(future_window["close"].iloc[-1])
     raw_move = close_after_24h - entry_price
