@@ -2,10 +2,17 @@
 
 import pandas as pd
 from typing import Optional, List
-from tvdatafeed import TvDatafeed, Interval
 import yfinance as yf
 import logging
 from datetime import datetime, timedelta
+
+try:
+    from tvdatafeed import TvDatafeed, Interval
+    TVDATAFEED_AVAILABLE = True
+except ImportError:
+    TvDatafeed = None
+    Interval = None
+    TVDATAFEED_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -21,12 +28,16 @@ class TradingViewFetcher:
             username: TradingView username (optional for free data)
             password: TradingView password (optional for free data)
         """
-        try:
-            self.tv = TvDatafeed(username=username, password=password)
-            logger.info("TradingView fetcher initialized")
-        except Exception as e:
-            logger.warning(f"Could not authenticate with TradingView: {e}. Using free mode.")
-            self.tv = TvDatafeed()
+        if not TVDATAFEED_AVAILABLE:
+            logger.warning("tvdatafeed is not installed. TradingView fetch disabled; using yfinance fallback only.")
+            self.tv = None
+        else:
+            try:
+                self.tv = TvDatafeed(username=username, password=password)
+                logger.info("TradingView fetcher initialized")
+            except Exception as e:
+                logger.warning(f"Could not authenticate with TradingView: {e}. Using free mode.")
+                self.tv = TvDatafeed()
         
         self.use_yfinance_fallback = True  # Enable fallback by default
 
@@ -68,6 +79,9 @@ class TradingViewFetcher:
         Returns:
             DataFrame with OHLCV data or None if fetch fails
         """
+        if not TVDATAFEED_AVAILABLE or self.tv is None:
+            return None
+
         try:
             logger.info(f"Trying {symbol} on NASDAQ (TradingView)")
             data = self.tv.get_hist(
