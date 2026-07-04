@@ -17,6 +17,11 @@ UNIVERSE_PATH = ROOT / "config" / "pair_universe_140.json"
 INDEX_TARGET = 10_000.0
 MIN_PER_INDEX = 10
 MAX_PER_INDEX = 15
+# Compact channel pair: fewer names, wider oscillating spread
+CHANNEL_MIN_PER_INDEX = 5
+CHANNEL_MAX_PER_INDEX = 7
+MIN_CHANNEL_CORR = 0.80
+MIN_CHANNEL_R2 = 0.82
 
 
 @dataclass
@@ -127,7 +132,10 @@ def _sector_groups(pool: List[StockMeta]) -> Dict[str, List[StockMeta]]:
     return g
 
 
-def _imbalance(a: List[StockMeta], b: List[StockMeta]) -> float:
+def _imbalance(a: List[StockMeta], b: List[StockMeta], *, channel: bool = False) -> float:
+    min_n = CHANNEL_MIN_PER_INDEX if channel else MIN_PER_INDEX
+    max_n = CHANNEL_MAX_PER_INDEX if channel else MAX_PER_INDEX
+    target_n = (min_n + max_n) / 2
     ta = sum(s.market_cap for s in a)
     tb = sum(s.market_cap for s in b)
     pa = sum(s.price for s in a)
@@ -149,10 +157,10 @@ def _imbalance(a: List[StockMeta], b: List[StockMeta]) -> float:
     price_r = (pa - pb) / max(pa, pb, 1)
     vol_r = (va - vb) / max(va, vb, 1)
     size_pen = 0.0
-    if not (MIN_PER_INDEX <= len(a) <= MAX_PER_INDEX):
-        size_pen += abs(len(a) - 12) * 5
-    if not (MIN_PER_INDEX <= len(b) <= MAX_PER_INDEX):
-        size_pen += abs(len(b) - 12) * 5
+    if not (min_n <= len(a) <= max_n):
+        size_pen += abs(len(a) - target_n) * 5
+    if not (min_n <= len(b) <= max_n):
+        size_pen += abs(len(b) - target_n) * 5
     return abs(cap_r) * 3 + abs(price_r) * 2 + abs(vol_r) + sec_pen * 4 + size_pen
 
 
@@ -286,6 +294,269 @@ def fetch_history(symbols: List[str], months: int = 2, interval: str = "1h") -> 
     return out.ffill().dropna(how="any")
 
 
+def _align_levels(level_a: pd.Series, level_b: pd.Series) -> Tuple[pd.Series, pd.Series]:
+    df = pd.concat([level_a.rename("a"), level_b.rename("b")], axis=1).dropna()
+    if df.empty:
+        return level_a.iloc[:0], level_b.iloc[:0]
+    return df["a"], df["b"]
+
+
+def channel_metrics(level_a: pd.Series, level_b: pd.Series) -> Dict:
+    """Score how straight/wide the spread channel is (for pair trading)."""
+    level_a, level_b = _align_levels(level_a, level_b)
+    if len(level_a) < 30:
+        return {"channel_score": 0.0}
+    spread = level_a - level_b
+    spread_range = float(spread.max() - spread.min())
+    spread_std = float(spread.std()) or 1.0
+    x = np.arange(len(spread), dtype=float)
+    slope = float(np.polyfit(x, spread.values, 1)[0])
+    total_drift = abs(slope * len(spread))
+    drift_ratio = total_drift / max(spread_range, 1.0)
+    ret_a, ret_b = level_a.pct_change(), level_b.pct_change()
+    corr = float(ret_a.corr(ret_b)) if not ret_a.isna().all() else 0.0
+    line_r2 = float(np.corrcoef(level_a.values, level_b.values)[0, 1] ** 2)
+    roll = min(48, max(12, len(spread) // 8))
+    z = (spread - spread.rolling(roll, min_periods=roll).mean()) / spread.rolling(
+        roll, min_periods=roll
+    ).std().replace(0, np.nan)
+    z_clean = z.dropna()
+    z_span = float(z_clean.max() - z_clean.min()) if len(z_clean) else 0.0
+    straight = line_r2 * (1.0 - min(drift_ratio, 0.85))
+    channel_score = spread_range * straight * max(corr, 0.0) * max(line_r2, 0.0)
+    return {
+        "spread_range": round(spread_range, 2),
+        "spread_std": round(spread_std, 2),
+        "spread_min": round(float(spread.min()), 2),
+        "spread_max": round(float(spread.max()), 2),
+        "drift_ratio": round(drift_ratio, 4),
+        "line_r2": round(line_r2, 4),
+        "correlation": round(corr, 4),
+        "z_span": round(z_span, 2),
+        "channel_score": round(channel_score, 2),
+    }
+
+
+def channel_bounds(spread: pd.Series, lower_pct: float = 12.0, upper_pct: float = 88.0) -> Tuple[float, float, float]:
+    """Fixed straight channel: lower / mid / upper from spread percentiles."""
+    lo = float(spread.quantile(lower_pct / 100.0))
+    hi = float(spread.quantile(upper_pct / 100.0))
+    mid = float(spread.quantile(0.5))
+    return lo, mid, hi
+
+
+def hedged_levels(level_a: pd.Series, level_b: pd.Series) -> Tuple[pd.Series, pd.Series, float]:
+    """OLS hedge ratio so spread channel is flatter (straight pair line)."""
+    level_a, level_b = _align_levels(level_a, level_b)
+    if len(level_a) < 20:
+        return level_a, level_b, 1.0
+    var_b = float(np.var(level_b.values))
+    if var_b <= 0:
+        return level_a, level_b, 1.0
+    beta = float(np.cov(level_a.values, level_b.values)[0, 1] / var_b)
+    # Express as two indices both ~10k: A unchanged, B scaled to hedged synthetic
+    hedged_b = level_b * beta
+    return level_a, hedged_b, beta
+
+
+def channel_roundtrip_trades(
+    level_a: pd.Series,
+    level_b: pd.Series,
+    lower_pct: float = 32.0,
+    upper_pct: float = 68.0,
+    use_hedge: bool = True,
+) -> Dict:
+    """
+    Buy spread at lower channel (long A, short B), sell at upper channel.
+    Simple buy → sell → buy → sell rhythm.
+    """
+    level_a, level_b = _align_levels(level_a, level_b)
+    beta = 1.0
+    if use_hedge:
+        level_a, level_b, beta = hedged_levels(level_a, level_b)
+    spread = level_a - level_b
+    lo, mid, hi = channel_bounds(spread, lower_pct, upper_pct)
+    ret_a = level_a.pct_change().fillna(0.0)
+    ret_b = level_b.pct_change().fillna(0.0)
+    spread_ret = ret_a - (beta * ret_b if use_hedge else ret_b)
+
+    position = 0  # 1 = long spread
+    trades = []
+    equity = [0.0]
+    for i in range(1, len(spread)):
+        s = float(spread.iloc[i])
+        pnl_bar = 0.0
+        if position == 1:
+            pnl_bar = float(spread_ret.iloc[i] * 100)
+        if position == 0 and s <= lo:
+            position = 1
+            trades.append({"bar": i, "action": "BUY_SPREAD", "spread": s, "level_a": float(level_a.iloc[i])})
+        elif position == 1 and s >= hi:
+            position = 0
+            trades.append({"bar": i, "action": "SELL_SPREAD", "spread": s, "level_a": float(level_a.iloc[i])})
+        equity.append(equity[-1] + pnl_bar)
+
+    eq = pd.Series(equity[1:], index=level_a.index[1:])
+    peak = eq.cummax()
+    max_dd = float((peak - eq).max())
+    roundtrips = sum(1 for t in trades if t["action"] == "SELL_SPREAD")
+    return {
+        "hedge_ratio": round(beta, 4),
+        "channel_lower": round(lo, 2),
+        "channel_mid": round(mid, 2),
+        "channel_upper": round(hi, 2),
+        "channel_width": round(hi - lo, 2),
+        "roundtrips": roundtrips,
+        "signals": trades,
+        "pnl_pct": round(float(eq.iloc[-1]) if len(eq) else 0.0, 2),
+        "max_dd_pct": round(max_dd, 2),
+    }
+
+
+def build_channel_pair(
+    pool: List[StockMeta],
+    prices: pd.DataFrame,
+    *,
+    n_per_side: int = 6,
+    iterations: int = 600,
+    seed: int = 42,
+) -> Tuple[List[StockMeta], List[StockMeta], Dict]:
+    """Pick n_per_side stocks per index to maximise straight-channel spread range."""
+    random.seed(seed)
+    np.random.seed(seed)
+    available = [s for s in pool if s.symbol in prices.columns]
+    if len(available) < n_per_side * 2 + 4:
+        raise ValueError("not enough priced symbols in pool")
+
+    best_a: List[StockMeta] = []
+    best_b: List[StockMeta] = []
+    best_meta: Dict = {"channel_score": -1.0}
+
+    for _ in range(iterations):
+        pick = random.sample(available, n_per_side * 2)
+        a = pick[:n_per_side]
+        b = pick[n_per_side:]
+        if _imbalance(a, b, channel=True) > 0.55:
+            continue
+        la = cap_weighted_series(a, prices)
+        lb = cap_weighted_series(b, prices)
+        if la.empty or lb.empty:
+            continue
+        cm = channel_metrics(la, lb)
+        if cm.get("correlation", 0) < MIN_CHANNEL_CORR:
+            continue
+        if cm.get("line_r2", 0) < MIN_CHANNEL_R2:
+            continue
+        if cm["channel_score"] > best_meta.get("channel_score", -1):
+            best_a, best_b = a, b
+            best_meta = cm
+
+    if not best_a:
+        # seeded search: split each sector's top caps across A/B
+        groups = _sector_groups(available)
+        a, b = [], []
+        for _sec, stocks in sorted(groups.items()):
+            for i, s in enumerate(stocks[:4]):
+                (a if i % 2 == 0 else b).append(s)
+        a = a[:n_per_side]
+        b = b[:n_per_side]
+        while len(a) < n_per_side:
+            for s in available:
+                if s not in a and s not in b:
+                    a.append(s)
+                    break
+        while len(b) < n_per_side:
+            for s in available:
+                if s not in a and s not in b:
+                    b.append(s)
+                    break
+        for _ in range(200):
+            if not a or not b:
+                break
+            ia, ib = random.randrange(len(a)), random.randrange(len(b))
+            a[ia], b[ib] = b[ib], a[ia]
+            la = cap_weighted_series(a, prices)
+            lb = cap_weighted_series(b, prices)
+            cm = channel_metrics(la, lb)
+            if cm.get("correlation", 0) >= MIN_CHANNEL_CORR and cm.get("line_r2", 0) >= MIN_CHANNEL_R2:
+                if cm["channel_score"] > best_meta.get("channel_score", -1):
+                    best_a, best_b = list(a), list(b)
+                    best_meta = cm
+            else:
+                a[ia], b[ib] = b[ib], a[ia]
+        if not best_a:
+            best_a, best_b = a[:n_per_side], b[:n_per_side]
+
+    la = cap_weighted_series(best_a, prices)
+    lb = cap_weighted_series(best_b, prices)
+    best_meta = channel_metrics(la, lb)
+    return best_a, best_b, best_meta
+
+
+def build_pair_indices_channel(
+    pool: List[StockMeta],
+    prices: pd.DataFrame,
+    code_a: str = "A10",
+    code_b: str = "B12",
+    n_per_side: int = 6,
+) -> PairBuildResult:
+    a_list, b_list, ch = build_channel_pair(pool, prices, n_per_side=n_per_side)
+    idx_a = SyntheticIndex(code=code_a, name=f"Channel {code_a}", members=a_list)
+    idx_b = SyntheticIndex(code=code_b, name=f"Channel {code_b}", members=b_list)
+    ta, tb = idx_a.totals(), idx_b.totals()
+    balance = {
+        "A10": {**ta, "n": idx_a.n, "sectors": idx_a.sector_weights()},
+        "B12": {**tb, "n": idx_b.n, "sectors": idx_b.sector_weights()},
+        "ratios": {
+            "cap_a_over_b": round(ta["market_cap"] / max(tb["market_cap"], 1), 4),
+            "price_a_over_b": round(ta["price_sum"] / max(tb["price_sum"], 1), 4),
+            "volume_a_over_b": round(ta["volume"] / max(tb["volume"], 1), 4),
+        },
+        "channel": ch,
+    }
+    return PairBuildResult(
+        index_a=idx_a,
+        index_b=idx_b,
+        pool_size=len(pool),
+        valid_pool=len(pool),
+        balance=balance,
+    )
+
+
+def fetch_pool_history(
+    symbols: List[str],
+    months: int = 2,
+    interval: str = "1h",
+    chunk: int = 40,
+) -> pd.DataFrame:
+    """Batch-download OHLCV close matrix for the full pool."""
+    from datetime import datetime, timedelta, timezone
+
+    end = datetime.now(timezone.utc)
+    start = end - timedelta(days=months * 31)
+    frames: List[pd.Series] = []
+    for i in range(0, len(symbols), chunk):
+        chunk_syms = symbols[i : i + chunk]
+        for sym in chunk_syms:
+            df = yf.download(
+                sym,
+                start=start.strftime("%Y-%m-%d"),
+                end=end.strftime("%Y-%m-%d"),
+                interval=interval,
+                progress=False,
+                auto_adjust=True,
+                threads=False,
+            )
+            if df is None or df.empty:
+                continue
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(0)
+            frames.append(df["Close"].rename(sym))
+    if not frames:
+        return pd.DataFrame()
+    return pd.concat(frames, axis=1).sort_index().ffill()
+
+
 def backtest_pair(
     level_a: pd.Series,
     level_b: pd.Series,
@@ -293,6 +564,7 @@ def backtest_pair(
     z_exit: float = 0.5,
 ) -> Dict:
     """Spread z-score mean-reversion pair stats."""
+    level_a, level_b = _align_levels(level_a, level_b)
     spread = level_a - level_b
     ratio = level_a / level_b
     roll = min(48, max(12, len(spread) // 10))

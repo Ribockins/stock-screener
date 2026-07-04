@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Build synthetic pair indices A10/B12 and backtest 2-month co-movement."""
+"""Build synthetic pair indices A10/B12 — balanced or channel (fewer stocks, wider range)."""
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from datetime import datetime, timezone
@@ -15,8 +16,12 @@ from src.pair_indices import (
     INDEX_TARGET,
     backtest_pair,
     build_pair_indices,
+    build_pair_indices_channel,
     cap_weighted_series,
+    channel_metrics,
+    channel_roundtrip_trades,
     fetch_history,
+    fetch_pool_history,
     fetch_pool_metadata,
     load_universe,
     save_config,
@@ -26,141 +31,129 @@ CONFIG_OUT = ROOT / "config" / "synthetic_pair_a10_b12.json"
 REPORT_OUT = ROOT / "reports" / "synthetic_pair_backtest.md"
 
 
-def main():
-    print("Loading universe (~140 FTSE + CAC)...")
-    rows = load_universe()
-    print(f"  {len(rows)} symbols in config")
-
-    print("Fetching metadata (yfinance)...")
-    pool = fetch_pool_metadata(rows)
-    print(f"  {len(pool)} stocks with valid cap/price/volume")
-
-    if len(pool) < 30:
-        print("ERROR: insufficient valid stocks")
-        sys.exit(1)
-
-    print("Building balanced pair A10 / B12...")
-    result = build_pair_indices(pool)
-    save_config(result, CONFIG_OUT)
-    print(f"  Saved {CONFIG_OUT}")
-
-    a_syms = [m.symbol for m in result.index_a.members]
-    b_syms = [m.symbol for m in result.index_b.members]
-    print(f"  A10: {result.index_a.n} stocks | B12: {result.index_b.n} stocks")
-    bal = result.balance["ratios"]
-    print(
-        f"  Balance ratios cap={bal['cap_a_over_b']} price={bal['price_a_over_b']} "
-        f"vol={bal['volume_a_over_b']}"
-    )
-
-    all_syms = list(dict.fromkeys(a_syms + b_syms))
-    print(f"\nFetching 2-month H1 history for {len(all_syms)} members...")
-    prices = fetch_history(all_syms, months=2, interval="1h")
-    if prices.empty:
-        print("ERROR: no price history")
-        sys.exit(1)
-    print(f"  {len(prices)} bars | {prices.index[0]} → {prices.index[-1]}")
-
-    level_a = cap_weighted_series(result.index_a.members, prices)
-    level_b = cap_weighted_series(result.index_b.members, prices)
-    stats = backtest_pair(level_a, level_b)
-
-    # Level at end
+def write_report(result, pool, rows, level_a, level_b, stats, channel_stats, mode: str):
     end_a, end_b = float(level_a.iloc[-1]), float(level_b.iloc[-1])
+    bal = result.balance["ratios"]
+    ta = result.index_a.totals()
+    tb = result.index_b.totals()
+    ch = result.balance.get("channel", {})
 
     lines = [
-        "# Synthetic Pair Indices — A10 vs B12",
+        f"# Synthetic Pair — A10 vs B12 ({mode})",
         "",
         f"**Generated:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}",
         "",
         "## Design",
-        f"- Pool: **{len(rows)}** configured · **{len(pool)}** with live metadata",
-        f"- **A10**: {result.index_a.n} stocks (cap-weighted synthetic index)",
-        f"- **B12**: {result.index_b.n} stocks",
-        f"- Base level: **{INDEX_TARGET:,.0f}** each at start of backtest window",
+        f"- Mode: **{mode}**",
+        f"- Pool: **{len(rows)}** configured · **{len(pool)}** with metadata",
+        f"- **A10**: {result.index_a.n} stocks · **B12**: {result.index_b.n} stocks",
+        f"- Base level: **{INDEX_TARGET:,.0f}** each",
         "",
-        "## Balance at construction",
-        "",
-        "| Metric | A10 | B12 | A/B ratio |",
-        "|--------|-----|-----|-----------|",
     ]
-    ta = result.index_a.totals()
-    tb = result.index_b.totals()
-    lines.append(
-        f"| Price sum | {ta['price_sum']:,.1f} | {tb['price_sum']:,.1f} | {bal['price_a_over_b']:.4f} |"
-    )
-    lines.append(
-        f"| Market cap | {ta['market_cap']/1e9:,.1f}B | {tb['market_cap']/1e9:,.1f}B | {bal['cap_a_over_b']:.4f} |"
-    )
-    lines.append(
-        f"| Volume | {ta['volume']/1e6:,.1f}M | {tb['volume']/1e6:,.1f}M | {bal['volume_a_over_b']:.4f} |"
-    )
-    lines.append(
-        f"| End index level (2m) | {end_a:,.1f} | {end_b:,.1f} | {end_a/end_b:.4f} |"
-    )
+
+    if mode == "channel":
+        lines += [
+            "## Straight channel",
+            "",
+            f"- **Channel width (spread):** {channel_stats['channel_width']} pts",
+            f"- **Lower / Mid / Upper:** {channel_stats['channel_lower']} / "
+            f"{channel_stats['channel_mid']} / {channel_stats['channel_upper']}",
+            f"- **Spread range (2m):** {ch.get('spread_min')} → {ch.get('spread_max')} "
+            f"(Δ {ch.get('spread_range')})",
+            f"- **Line R² (A vs B):** {ch.get('line_r2')} — straight co-movement",
+            f"- **Drift ratio:** {ch.get('drift_ratio')} (lower = flatter channel)",
+            f"- **Round-trips (buy/sell):** {channel_stats['roundtrips']}",
+            f"- **Channel strategy PnL:** {channel_stats['pnl_pct']}% · DD {channel_stats['max_dd_pct']}%",
+            "",
+            "### How to trade",
+            "",
+            "| Spread at | Action |",
+            "|-----------|--------|",
+            f"| ≤ **{channel_stats['channel_lower']}** (lower rail) | **BUY spread** — long A10, short B12 |",
+            f"| ≥ **{channel_stats['channel_upper']}** (upper rail) | **SELL spread** — flat / reverse |",
+            f"| ~ **{channel_stats['channel_mid']}** | Neutral — wait |",
+            "",
+        ]
 
     lines += [
+        "## Balance",
         "",
-        "### A10 members",
+        "| Metric | A10 | B12 | A/B |",
+        "|--------|-----|-----|-----|",
+        f"| Price sum | {ta['price_sum']:,.0f} | {tb['price_sum']:,.0f} | {bal['price_a_over_b']:.3f} |",
+        f"| Market cap | {ta['market_cap']/1e9:,.0f}B | {tb['market_cap']/1e9:,.0f}B | {bal['cap_a_over_b']:.3f} |",
+        f"| End level | {end_a:,.0f} | {end_b:,.0f} | {end_a/end_b:.3f} |",
         "",
-        "| Symbol | Name | Sector | Weight% |",
-        "|--------|------|--------|---------|",
+        "### A10",
+        "",
+        "| Symbol | Name | Sector |",
+        "|--------|------|--------|",
     ]
-    cap_a = sum(m.market_cap for m in result.index_a.members) or 1
     for m in result.index_a.members:
-        w = m.market_cap / cap_a * 100
-        lines.append(f"| `{m.symbol}` | {m.name} | {m.sector} | {w:.1f}% |")
+        lines.append(f"| `{m.symbol}` | {m.name} | {m.sector} |")
 
-    lines += [
-        "",
-        "### B12 members",
-        "",
-        "| Symbol | Name | Sector | Weight% |",
-        "|--------|------|--------|---------|",
-    ]
-    cap_b = sum(m.market_cap for m in result.index_b.members) or 1
+    lines += ["", "### B12", "", "| Symbol | Name | Sector |", "|--------|------|--------|"]
     for m in result.index_b.members:
-        w = m.market_cap / cap_b * 100
-        lines.append(f"| `{m.symbol}` | {m.name} | {m.sector} | {w:.1f}% |")
+        lines.append(f"| `{m.symbol}` | {m.name} | {m.sector} |")
 
     lines += [
         "",
-        "## 2-month backtest (H1)",
+        "## Backtest (2m H1)",
         "",
-        f"- **Return correlation:** {stats['correlation']}",
-        f"- **Spread (A10−B12):** mean {stats['spread_mean']} · σ {stats['spread_std']} · "
-        f"range [{stats['spread_min']}, {stats['spread_max']}]",
-        f"- **Ratio A10/B12:** mean {stats['ratio_mean']} · σ {stats['ratio_std']}",
-        f"- **Z-score range:** [{stats['z_min']}, {stats['z_max']}]",
-        f"- **Simple pair strategy** (z>2 short spread, z<-2 long, exit |z|<0.5):",
-        f"  - Cumulative PnL: **{stats['pair_trades_pnl_pct']}%** (spread legs, unlevered)",
-        f"  - Max drawdown: **{stats['pair_max_dd_pct']}%**",
+        f"- Correlation: **{stats['correlation']}**",
+        f"- Spread σ: **{stats['spread_std']}** · z-range [{stats['z_min']}, {stats['z_max']}]",
+        f"- Z-score strategy PnL: {stats['pair_trades_pnl_pct']}% · DD {stats['pair_max_dd_pct']}%",
         "",
-        "## Pair-trading read",
-        "",
-    ]
-
-    if stats["correlation"] >= 0.85:
-        lines.append("✅ **High co-movement** — indices oscillate in tandem; spread mean-reversion feasible.")
-    elif stats["correlation"] >= 0.7:
-        lines.append("⚠️ **Moderate co-movement** — hedge works with tighter risk controls.")
-    else:
-        lines.append("❌ **Low correlation** — revisit basket balance or member selection.")
-
-    if abs(end_a - end_b) / INDEX_TARGET < 0.05:
-        lines.append(f"✅ **End levels within 5%** of each other ({end_a:,.0f} vs {end_b:,.0f}).")
-    else:
-        lines.append(f"⚠️ **End level drift** — rebalance weights periodically ({end_a:,.0f} vs {end_b:,.0f}).")
-
-    lines += [
-        "",
-        f"Config: `{CONFIG_OUT.relative_to(ROOT)}`",
+        f"Config: `{CONFIG_OUT.name}`",
     ]
 
     REPORT_OUT.parent.mkdir(parents=True, exist_ok=True)
     REPORT_OUT.write_text("\n".join(lines), encoding="utf-8")
-    print(f"\nReport: {REPORT_OUT}")
-    print(json.dumps(stats, indent=2))
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument(
+        "--mode",
+        choices=("balanced", "channel"),
+        default="channel",
+        help="balanced=15+15 matched; channel=6+6 max spread in straight channel",
+    )
+    ap.add_argument("--stocks-per-side", type=int, default=6)
+    args = ap.parse_args()
+
+    print(f"Mode: {args.mode}")
+    rows = load_universe()
+    pool = fetch_pool_metadata(rows)
+    print(f"Pool: {len(pool)} valid stocks")
+
+    symbols = [s.symbol for s in pool]
+    print("Downloading 2m H1 for full pool...")
+    prices = fetch_pool_history(symbols, months=2, interval="1h")
+    print(f"  Price matrix: {prices.shape[1]} symbols × {len(prices)} bars")
+
+    if args.mode == "channel":
+        print(f"Optimising channel pair ({args.stocks_per_side} stocks per side)...")
+        result = build_pair_indices_channel(
+            pool, prices, n_per_side=args.stocks_per_side
+        )
+        ch = result.balance.get("channel", {})
+        print(f"  Channel score={ch.get('channel_score')} range={ch.get('spread_range')} corr={ch.get('correlation')}")
+    else:
+        result = build_pair_indices(pool)
+
+    save_config(result, CONFIG_OUT)
+
+    all_syms = [m.symbol for m in result.index_a.members + result.index_b.members]
+    sub = prices[all_syms].dropna(how="any")
+    level_a = cap_weighted_series(result.index_a.members, sub)
+    level_b = cap_weighted_series(result.index_b.members, sub)
+    stats = backtest_pair(level_a, level_b)
+    channel_stats = channel_roundtrip_trades(level_a, level_b)
+
+    write_report(result, pool, rows, level_a, level_b, stats, channel_stats, args.mode)
+    print(f"Report: {REPORT_OUT}")
+    print(json.dumps({**stats, **channel_stats, "channel_meta": result.balance.get("channel", {})}, indent=2)[:2000])
 
 
 if __name__ == "__main__":
