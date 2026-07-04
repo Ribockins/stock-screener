@@ -1,0 +1,33 @@
+{
+  "description": "Flat scan list: 4 index benchmarks + 19 unique constituents (deduplicated AAPL)",
+  "source": "index_constituents_v1",
+  "refresh_minutes": 0,
+  "timeframe": "60",
+  "timeframes": ["15", "60", "240", "1d"],
+  "bars": 120,
+  "instruments": [
+    {"symbol": "^GSPC", "exchange": "INDEX", "name": "US500", "group": "US500"},
+    {"symbol": "^DJI", "exchange": "INDEX", "name": "US30", "group": "US30"},
+    {"symbol": "^FTSE", "exchange": "INDEX", "name": "UK100", "group": "UK100"},
+    {"symbol": "^FCHI", "exchange": "INDEX", "name": "CAC40", "group": "CAC40"},
+    {"symbol": "NVDA", "exchange": "NASDAQ", "name": "NVIDIA", "group": "US500"},
+    {"symbol": "AAPL", "exchange": "NASDAQ", "name": "Apple", "group": "US500,US30"},
+    {"symbol": "MSFT", "exchange": "NASDAQ", "name": "Microsoft", "group": "US500"},
+    {"symbol": "AMZN", "exchange": "NASDAQ", "name": "Amazon", "group": "US500"},
+    {"symbol": "GOOGL", "exchange": "NASDAQ", "name": "Alphabet", "group": "US500"},
+    {"symbol": "MCD", "exchange": "NYSE", "name": "McDonald's", "group": "US30"},
+    {"symbol": "BA", "exchange": "NYSE", "name": "Boeing", "group": "US30"},
+    {"symbol": "JNJ", "exchange": "NYSE", "name": "Johnson & Johnson", "group": "US30"},
+    {"symbol": "DIS", "exchange": "NYSE", "name": "Walt Disney", "group": "US30"},
+    {"symbol": "SHEL.L", "exchange": "LSE", "name": "Shell", "group": "UK100"},
+    {"symbol": "GSK.L", "exchange": "LSE", "name": "GSK", "group": "UK100"},
+    {"symbol": "BAB.L", "exchange": "LSE", "name": "Babcock International", "group": "UK100"},
+    {"symbol": "ADM.L", "exchange": "LSE", "name": "Admiral Group", "group": "UK100"},
+    {"symbol": "ENT.L", "exchange": "LSE", "name": "Entain", "group": "UK100"},
+    {"symbol": "TTE.PA", "exchange": "EPA", "name": "TotalEnergies", "group": "CAC40"},
+    {"symbol": "SU.PA", "exchange": "EPA", "name": "Schneider Electric", "group": "CAC40"},
+    {"symbol": "MC.PA", "exchange": "EPA", "name": "LVMH", "group": "CAC40"},
+    {"symbol": "AIR.PA", "exchange": "EPA", "name": "Airbus", "group": "CAC40"},
+    {"symbol": "BNP.PA", "exchange": "EPA", "name": "BNP Paribas", "group": "CAC40"}
+  ]
+}
