@@ -81,11 +81,15 @@ class SQLiteManager(DatabaseManager):
                 price REAL,
                 divergence_type TEXT,
                 divergence_strength TEXT,
-                market TEXT,
-                INDEX idx_symbol (symbol),
-                INDEX idx_timestamp (timestamp)
+                market TEXT
             )
         ''')
+        cursor.execute(
+            'CREATE INDEX IF NOT EXISTS idx_symbol ON screening_results (symbol)'
+        )
+        cursor.execute(
+            'CREATE INDEX IF NOT EXISTS idx_timestamp ON screening_results (timestamp)'
+        )
         
         conn.commit()
         conn.close()
