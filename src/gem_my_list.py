@@ -111,6 +111,14 @@ def _notes(scan: InstrumentMTFScan) -> str:
     if sme and sme.spc >= 2:
         bits.append(f"SPC{sme.spc}")
 
+    nat = scan.primary_native()
+    if nat and nat.score > 0:
+        bits.append(f"EDGE2.9 {nat.label}")
+    if scan.native_super_buy:
+        bits.append("SUPER ALIGN BUY")
+    elif scan.native_super_sell:
+        bits.append("SUPER ALIGN SELL")
+
     edge = scan.primary_edge()
     if edge and edge.summary not in ("no edge", "volume neutral"):
         bits.append(edge.summary)
@@ -138,6 +146,9 @@ def _tf_notes(scan: InstrumentMTFScan, tf: str) -> str:
         div = _edge_div_tag(edge)
         if div:
             bits.append(div)
+    nat = scan.native_signals.get(tf)
+    if nat and nat.score > 0:
+        bits.append(nat.label)
     if a.exec_state not in ("WAIT",):
         bits.append(a.exec_state.replace("_", " "))
     if a.near_support:

@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 from src.edge_engine import EdgeBarSignals, analyze_edge_bar
+from src.edge_native import NativeEngineResult, analyze_native_engine, super_alignment
 from src.gem.analyzer import GEMAnalyzer
 from src.gem.config import GEMConfig
 from src.gem.models import GEMAnalysis
@@ -32,6 +33,9 @@ class InstrumentMTFScan:
     analyses: Dict[str, GEMAnalysis] = field(default_factory=dict)
     ratings: Dict[str, GemStrengthRating] = field(default_factory=dict)
     edge_signals: Dict[str, EdgeBarSignals] = field(default_factory=dict)
+    native_signals: Dict[str, NativeEngineResult] = field(default_factory=dict)
+    native_super_buy: bool = False
+    native_super_sell: bool = False
     sme_scores: Dict[str, SMELiveScore] = field(default_factory=dict)
     combined_rating: Optional[GemStrengthRating] = None
     checklist: Optional[ScanChecklist] = None
@@ -41,6 +45,9 @@ class InstrumentMTFScan:
 
     def primary_edge(self) -> Optional[EdgeBarSignals]:
         return self.edge_signals.get("60") or next(iter(self.edge_signals.values()), None)
+
+    def primary_native(self) -> Optional[NativeEngineResult]:
+        return self.native_signals.get("60") or next(iter(self.native_signals.values()), None)
 
     def primary_sme(self) -> Optional[SMELiveScore]:
         return self.sme_scores.get("60") or next(iter(self.sme_scores.values()), None)
@@ -126,6 +133,9 @@ class GEMPlatform:
                     )
                     if edge:
                         row.edge_signals[tf] = edge
+                    native = analyze_native_engine(df)
+                    if native:
+                        row.native_signals[tf] = native
                     combo = edge.edge_combo_score if edge else 0
                     row.sme_scores[tf] = score_signal_memory(
                         df,
@@ -136,6 +146,10 @@ class GEMPlatform:
                     )
 
             if row.ratings:
+                if row.native_signals:
+                    sup = super_alignment(row.native_signals)
+                    row.native_super_buy = sup["super_buy"]
+                    row.native_super_sell = sup["super_sell"]
                 row.combined_rating = combine_mtf_ratings(list(row.ratings.values()))
                 row.checklist = build_combined_checklist(sym, name, row.analyses, row.ratings)
                 primary = row.analyses.get("60") or row.primary_analysis()

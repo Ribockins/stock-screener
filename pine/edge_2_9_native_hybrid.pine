@@ -1,0 +1,14 @@
+//@version=6
+// EDGE 2.9 • NATIVE HYBRID ENGINE — reference copy for Python port (src/edge_native.py)
+// Original: user TradingView script — MTF scanner M5 M15 H1 H4 D
+// See docs/edge-2.9-native-hybrid.md
+
+indicator("EDGE2.9 • NATIVE HYBRID ENGINE • LIGHT • M5 M15 H1 H4 D", overlay=false)
+
+// Full source maintained in repository; Python implementation mirrors:
+// - f_side_score (native 0-4)
+// - RSI + MFI divergence with OB/OS memory
+// - S/R zone + price reaction
+// - Super alignment (all 5 TFs score>=3 same direction)
+
+// ... (see git history / user paste in docs/edge-2.9-native-hybrid.md for complete Pine)

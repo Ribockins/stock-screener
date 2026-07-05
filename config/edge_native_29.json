@@ -1,0 +1,40 @@
+{
+  "version": "2.9",
+  "name": "EDGE Native Hybrid Engine",
+  "source": "TradingView Pine — EDGE2.9 NATIVE HYBRID LIGHT",
+  "timeframes": ["5", "15", "60", "240", "1d"],
+  "core": {
+    "rsi_length": 14,
+    "overbought_level": 72,
+    "oversold_level": 28,
+    "lookback_bars": 84,
+    "extreme_memory_bars": 10,
+    "divergence_memory_bars": 5
+  },
+  "mfi": {
+    "length": 14,
+    "overbought_level": 80,
+    "oversold_level": 20
+  },
+  "zone": {
+    "lookback": 80,
+    "width_pct_of_range": 0.15
+  },
+  "reaction": {
+    "wick_min": 0.45,
+    "close_strength": 0.55,
+    "use_engulfing": true,
+    "use_close_back_inside": true
+  },
+  "super_alignment": {
+    "min_score": 3,
+    "required_timeframes": ["5", "15", "60", "240", "1d"]
+  },
+  "score_labels": {
+    "0": "none",
+    "1": "weak div",
+    "2": "dual div memory",
+    "3": "div + zone",
+    "4": "div + zone + reaction"
+  }
+}

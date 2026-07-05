@@ -91,6 +91,12 @@ TradingView (limited nologin) → yfinance fallback. Requires network.
 - Reports: **EDGE (H1)** column on GEM My List; per-TF tables show **MFI** and **Edge** (0–4)
 - Tests: `PYTHONPATH=/workspace pytest tests/test_edge_signals.py -v`
 
+### EDGE 2.9 Native Hybrid (Pine port)
+
+- Code: `src/edge_native.py` · config: `config/edge_native_29.json` · doc: `docs/edge-2.9-native-hybrid.md`
+- MTF scan fills `native_signals` (score 0–4, dir) + **SUPER ALIGN** flags on GEM My List notes
+- Tests: `pytest tests/test_edge_native.py -v`
+
 ### Full scan pipeline (recommended)
 
 ```bash
