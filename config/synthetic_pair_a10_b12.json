@@ -1,0 +1,357 @@
+{
+  "pair": "A10_B12",
+  "index_target": 10000.0,
+  "A10": {
+    "code": "A10",
+    "name": "Synthetic A10",
+    "n": 15,
+    "target_level": 10000.0,
+    "members": [
+      {
+        "symbol": "GLE.PA",
+        "name": "Societe Generale",
+        "sector": "Financials",
+        "region": "FR",
+        "price": 77.34,
+        "market_cap": 56460906496.0,
+        "weight": 0.011192
+      },
+      {
+        "symbol": "RMS.PA",
+        "name": "Hermes",
+        "sector": "Consumer Discretionary",
+        "region": "FR",
+        "price": 1641.0,
+        "market_cap": 171878023168.0,
+        "weight": 0.034071
+      },
+      {
+        "symbol": "AZN.L",
+        "name": "AstraZeneca",
+        "sector": "Health Care",
+        "region": "UK",
+        "price": 14456.0,
+        "market_cap": 224194772992.0,
+        "weight": 0.044442
+      },
+      {
+        "symbol": "BN.PA",
+        "name": "Danone",
+        "sector": "Consumer Staples",
+        "region": "FR",
+        "price": 73.4,
+        "market_cap": 47131287552.0,
+        "weight": 0.009343
+      },
+      {
+        "symbol": "AIR.PA",
+        "name": "Airbus",
+        "sector": "Industrials",
+        "region": "FR",
+        "price": 206.15,
+        "market_cap": 162287075328.0,
+        "weight": 0.03217
+      },
+      {
+        "symbol": "SHEL.L",
+        "name": "Shell",
+        "sector": "Energy",
+        "region": "UK",
+        "price": 2891.5,
+        "market_cap": 160252231680.0,
+        "weight": 0.031766
+      },
+      {
+        "symbol": "SAF.PA",
+        "name": "Safran",
+        "sector": "Industrials",
+        "region": "FR",
+        "price": 356.7,
+        "market_cap": 148064387072.0,
+        "weight": 0.02935
+      },
+      {
+        "symbol": "RIO.L",
+        "name": "Rio Tinto",
+        "sector": "Materials",
+        "region": "UK",
+        "price": 7070.0,
+        "market_cap": 114976030720.0,
+        "weight": 0.022791
+      },
+      {
+        "symbol": "OR.PA",
+        "name": "L'Oreal",
+        "sector": "Consumer Staples",
+        "region": "FR",
+        "price": 382.45,
+        "market_cap": 203616075776.0,
+        "weight": 0.040362
+      },
+      {
+        "symbol": "CS.PA",
+        "name": "AXA",
+        "sector": "Financials",
+        "region": "FR",
+        "price": 43.71,
+        "market_cap": 88923029504.0,
+        "weight": 0.017627
+      },
+      {
+        "symbol": "EL.PA",
+        "name": "EssilorLuxottica",
+        "sector": "Health Care",
+        "region": "FR",
+        "price": 172.2,
+        "market_cap": 79141642240.0,
+        "weight": 0.015688
+      },
+      {
+        "symbol": "TTE.PA",
+        "name": "TotalEnergies",
+        "sector": "Energy",
+        "region": "FR",
+        "price": 66.94,
+        "market_cap": 148935081984.0,
+        "weight": 0.029523
+      },
+      {
+        "symbol": "DG.PA",
+        "name": "Vinci",
+        "sector": "Industrials",
+        "region": "FR",
+        "price": 127.9,
+        "market_cap": 70874873856.0,
+        "weight": 0.014049
+      },
+      {
+        "symbol": "ENGI.PA",
+        "name": "Engie",
+        "sector": "Utilities",
+        "region": "FR",
+        "price": 27.73,
+        "market_cap": 70460112896.0,
+        "weight": 0.013967
+      },
+      {
+        "symbol": "LLOY.L",
+        "name": "Lloyds Banking",
+        "sector": "Financials",
+        "region": "UK",
+        "price": 115.05,
+        "market_cap": 66920263680.0,
+        "weight": 0.013265
+      }
+    ],
+    "totals": {
+      "price_sum": 27708.07001876831,
+      "market_cap": 1814115794944.0,
+      "volume": 218851859.2
+    },
+    "sector_weights": {
+      "Financials": 0.117,
+      "Consumer Discretionary": 0.0947,
+      "Health Care": 0.1672,
+      "Consumer Staples": 0.1382,
+      "Industrials": 0.2101,
+      "Energy": 0.1704,
+      "Materials": 0.0634,
+      "Utilities": 0.0388
+    }
+  },
+  "B12": {
+    "code": "B12",
+    "name": "Synthetic B12",
+    "n": 15,
+    "target_level": 10000.0,
+    "members": [
+      {
+        "symbol": "MC.PA",
+        "name": "LVMH",
+        "sector": "Consumer Discretionary",
+        "region": "FR",
+        "price": 495.7,
+        "market_cap": 244624097280.0,
+        "weight": 0.048491
+      },
+      {
+        "symbol": "SU.PA",
+        "name": "Schneider Electric",
+        "sector": "Industrials",
+        "region": "FR",
+        "price": 280.1,
+        "market_cap": 157508780032.0,
+        "weight": 0.031223
+      },
+      {
+        "symbol": "BP.L",
+        "name": "BP",
+        "sector": "Energy",
+        "region": "UK",
+        "price": 467.15,
+        "market_cap": 72176459776.0,
+        "weight": 0.014307
+      },
+      {
+        "symbol": "RR.L",
+        "name": "Rolls-Royce",
+        "sector": "Industrials",
+        "region": "UK",
+        "price": 1504.2,
+        "market_cap": 124667363328.0,
+        "weight": 0.024713
+      },
+      {
+        "symbol": "AI.PA",
+        "name": "Air Liquide",
+        "sector": "Materials",
+        "region": "FR",
+        "price": 180.3,
+        "market_cap": 114646958080.0,
+        "weight": 0.022726
+      },
+      {
+        "symbol": "BNP.PA",
+        "name": "BNP Paribas",
+        "sector": "Financials",
+        "region": "FR",
+        "price": 102.68,
+        "market_cap": 113112350720.0,
+        "weight": 0.022422
+      },
+      {
+        "symbol": "ULVR.L",
+        "name": "Unilever",
+        "sector": "Consumer Staples",
+        "region": "UK",
+        "price": 4620.0,
+        "market_cap": 99477807104.0,
+        "weight": 0.019719
+      },
+      {
+        "symbol": "GSK.L",
+        "name": "GSK",
+        "sector": "Health Care",
+        "region": "UK",
+        "price": 2015.0,
+        "market_cap": 80712744960.0,
+        "weight": 0.016
+      },
+      {
+        "symbol": "SAN.PA",
+        "name": "Sanofi",
+        "sector": "Health Care",
+        "region": "FR",
+        "price": 75.81,
+        "market_cap": 90735812608.0,
+        "weight": 0.017986
+      },
+      {
+        "symbol": "BARC.L",
+        "name": "Barclays",
+        "sector": "Financials",
+        "region": "UK",
+        "price": 522.3,
+        "market_cap": 70441091072.0,
+        "weight": 0.013963
+      },
+      {
+        "symbol": "BA.L",
+        "name": "BAE Systems",
+        "sector": "Industrials",
+        "region": "UK",
+        "price": 1981.5,
+        "market_cap": 58102050816.0,
+        "weight": 0.011517
+      },
+      {
+        "symbol": "HSBA.L",
+        "name": "HSBC",
+        "sector": "Financials",
+        "region": "UK",
+        "price": 1451.0,
+        "market_cap": 248820514816.0,
+        "weight": 0.049323
+      },
+      {
+        "symbol": "ACA.PA",
+        "name": "Credit Agricole",
+        "sector": "Financials",
+        "region": "FR",
+        "price": 17.72,
+        "market_cap": 53599842304.0,
+        "weight": 0.010625
+      },
+      {
+        "symbol": "BATS.L",
+        "name": "British American Tobacco",
+        "sector": "Consumer Staples",
+        "region": "UK",
+        "price": 4621.0,
+        "market_cap": 93646200832.0,
+        "weight": 0.018563
+      },
+      {
+        "symbol": "LSEG.L",
+        "name": "London Stock Exchange",
+        "sector": "Financials",
+        "region": "UK",
+        "price": 8670.0,
+        "market_cap": 42215092224.0,
+        "weight": 0.008368
+      }
+    ],
+    "totals": {
+      "price_sum": 27004.459951400757,
+      "market_cap": 1664487165952.0,
+      "volume": 191255895.0
+    },
+    "sector_weights": {
+      "Consumer Discretionary": 0.147,
+      "Industrials": 0.2044,
+      "Energy": 0.0434,
+      "Materials": 0.0689,
+      "Financials": 0.3173,
+      "Consumer Staples": 0.116,
+      "Health Care": 0.103
+    }
+  },
+  "balance": {
+    "A10": {
+      "price_sum": 27708.07001876831,
+      "market_cap": 1814115794944.0,
+      "volume": 218851859.2,
+      "n": 15,
+      "sectors": {
+        "Financials": 0.11702902332458531,
+        "Consumer Discretionary": 0.09474479173106241,
+        "Health Care": 0.16720895991171486,
+        "Consumer Staples": 0.13822015332584672,
+        "Industrials": 0.21014443362352628,
+        "Energy": 0.17043416662029798,
+        "Materials": 0.06337855115998767,
+        "Utilities": 0.0388399203029788
+      }
+    },
+    "B12": {
+      "price_sum": 27004.459951400757,
+      "market_cap": 1664487165952.0,
+      "volume": 191255895.0,
+      "n": 15,
+      "sectors": {
+        "Consumer Discretionary": 0.1469666467149284,
+        "Industrials": 0.20443425526887654,
+        "Energy": 0.04336258113153959,
+        "Materials": 0.068878246961086,
+        "Financials": 0.317328305042174,
+        "Consumer Staples": 0.11602613218440955,
+        "Health Care": 0.1030038326969859
+      }
+    },
+    "ratios": {
+      "cap_a_over_b": 1.0899,
+      "price_a_over_b": 1.0261,
+      "volume_a_over_b": 1.1443
+    }
+  }
+}

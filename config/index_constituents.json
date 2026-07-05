@@ -1,0 +1,74 @@
+{
+  "description": "Index benchmark + 5 constituent stocks per region — EDGE/GEM behaviour study baskets",
+  "study_id": "index_constituents_v1",
+  "source": "user_index_baskets",
+  "refresh_minutes": 0,
+  "timeframes": ["15", "60", "240", "1d"],
+  "bars": 120,
+  "groups": [
+    {
+      "index_key": "US500",
+      "index_name": "S&P 500",
+      "benchmark": {
+        "symbol": "^GSPC",
+        "exchange": "INDEX",
+        "name": "US500"
+      },
+      "constituents": [
+        {"symbol": "NVDA", "exchange": "NASDAQ", "name": "NVIDIA"},
+        {"symbol": "AAPL", "exchange": "NASDAQ", "name": "Apple"},
+        {"symbol": "MSFT", "exchange": "NASDAQ", "name": "Microsoft"},
+        {"symbol": "AMZN", "exchange": "NASDAQ", "name": "Amazon"},
+        {"symbol": "GOOGL", "exchange": "NASDAQ", "name": "Alphabet"}
+      ]
+    },
+    {
+      "index_key": "US30",
+      "index_name": "Dow Jones",
+      "benchmark": {
+        "symbol": "^DJI",
+        "exchange": "INDEX",
+        "name": "US30"
+      },
+      "constituents": [
+        {"symbol": "AAPL", "exchange": "NASDAQ", "name": "Apple"},
+        {"symbol": "MCD", "exchange": "NYSE", "name": "McDonald's"},
+        {"symbol": "BA", "exchange": "NYSE", "name": "Boeing"},
+        {"symbol": "JNJ", "exchange": "NYSE", "name": "Johnson & Johnson"},
+        {"symbol": "DIS", "exchange": "NYSE", "name": "Walt Disney"}
+      ]
+    },
+    {
+      "index_key": "UK100",
+      "index_name": "FTSE 100",
+      "benchmark": {
+        "symbol": "^FTSE",
+        "exchange": "INDEX",
+        "name": "UK100"
+      },
+      "constituents": [
+        {"symbol": "SHEL.L", "exchange": "LSE", "name": "Shell"},
+        {"symbol": "GSK.L", "exchange": "LSE", "name": "GSK"},
+        {"symbol": "BAB.L", "exchange": "LSE", "name": "Babcock International"},
+        {"symbol": "ADM.L", "exchange": "LSE", "name": "Admiral Group"},
+        {"symbol": "ENT.L", "exchange": "LSE", "name": "Entain"}
+      ]
+    },
+    {
+      "index_key": "CAC40",
+      "index_name": "CAC 40",
+      "benchmark": {
+        "symbol": "^FCHI",
+        "exchange": "INDEX",
+        "name": "CAC40"
+      },
+      "constituents": [
+        {"symbol": "TTE.PA", "exchange": "EPA", "name": "TotalEnergies"},
+        {"symbol": "SU.PA", "exchange": "EPA", "name": "Schneider Electric"},
+        {"symbol": "MC.PA", "exchange": "EPA", "name": "LVMH"},
+        {"symbol": "AIR.PA", "exchange": "EPA", "name": "Airbus"},
+        {"symbol": "BNP.PA", "exchange": "EPA", "name": "BNP Paribas"}
+      ]
+    }
+  ]
+}
