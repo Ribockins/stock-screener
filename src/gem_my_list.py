@@ -8,6 +8,18 @@ from src.gem.dashboard import TFDashboardState
 from src.gem.timeframes import DEFAULT_TIMEFRAMES, TF_SHORT
 from src.gem_platform import InstrumentMTFScan
 from src.execution_tier import TIER_WAIT, execution_tier, tier_label
+from src.gem_colours import (
+    CHIP_BEAR,
+    CHIP_BULL,
+    checklist_chip,
+    colour_legend_lines,
+    coloured_dashboard_row,
+    direction_chip,
+    edge_plus_chip,
+    mtf_strength_chip,
+    signal_chip,
+    tier_chip,
+)
 from src.gem_strength import strength_badge
 
 
@@ -151,16 +163,24 @@ def _tf_notes(scan: InstrumentMTFScan, tf: str) -> str:
 def format_mtf_cell(scan: InstrumentMTFScan) -> str:
     cr = scan.combined_rating
     if not cr:
-        return "—"
-    return f"{strength_badge(cr.strength)} {cr.strength} {cr.direction.lower()}"
+        return neutral_fallback()
+    return mtf_strength_chip(cr.strength, cr.direction, strength_badge(cr.strength))
+
+
+def neutral_fallback() -> str:
+    from src.gem_colours import neutral_chip
+    return neutral_chip("—")
 
 
 def format_checklist_cell(scan: InstrumentMTFScan) -> str:
     cl = scan.checklist
     if not cl:
-        return "—"
-    mark = "✅" if cl.trade_ok else ("⚠️" if cl.score >= 4 else "—")
-    return f"{cl.score}/6 {mark}"
+        return neutral_fallback()
+    return checklist_chip(cl.score, cl.trade_ok)
+
+
+def render_colour_legend_markdown() -> List[str]:
+    return colour_legend_lines()
 
 
 def build_gem_my_list_rows(
@@ -182,24 +202,27 @@ def build_gem_my_list_rows(
         )
         sme_h1 = s.sme_scores.get("60")
         edge_plus = sme_h1.edge_plus if sme_h1 else 0
+        dir_chip = direction_chip(cr.direction if cr else "NEUTRAL")
         rows.append(
             (
                 s.display_name,
+                dir_chip,
                 format_checklist_cell(s),
                 format_mtf_cell(s),
                 format_sme_cell(s),
                 format_svi_cell(s),
-                str(edge_plus) if sme_h1 else "—",
+                edge_plus_chip(edge_plus) if sme_h1 else neutral_fallback(),
                 format_edge_cell(s),
-                tier,
+                tier_chip(tier),
+                signal_chip(cr.signal_name if cr else "—"),
                 _notes(s),
                 prio,
                 score,
                 edge_plus,
             )
         )
-    rows.sort(key=lambda r: (r[9], r[10], r[11]), reverse=True)
-    return [tuple(r[:9]) for r in rows]
+    rows.sort(key=lambda r: (r[11], r[12], r[13]), reverse=True)
+    return [tuple(r[:11]) for r in rows]
 
 
 def render_gem_my_list_markdown(
@@ -211,16 +234,16 @@ def render_gem_my_list_markdown(
     lines = [
         f"## {heading}",
         "",
-        "| Instrument | Checklist | MTF | SME (H1) | SVI | EDGE+ | Combo | Exec | Notes |",
-        "|------------|-----------|-----|----------|-----|-------|-------|------|-------|",
+        "| Instrument | Dir | Checklist | MTF | SME (H1) | SVI | EDGE+ | Combo | Exec | Signal | Notes |",
+        "|------------|-----|-----------|-----|----------|-----|-------|-------|------|--------|-------|",
     ]
     board = build_gem_my_list_rows(scans, trade_ready_only=trade_ready_only)
     if not board:
-        lines.append("| _none_ | — | — | — | — | — | — | WAIT | No rows |")
+        lines.append("| _none_ | — | — | — | — | — | — | — | WAIT | — | No rows |")
     else:
-        for inst, chk, mtf, sme, svi, eplus, combo, ex, notes in board:
+        for inst, dir_c, chk, mtf, sme, svi, eplus, combo, ex, sig, notes in board:
             lines.append(
-                f"| **{inst}** | {chk} | {mtf} | {sme} | {svi} | **{eplus}** | {combo} | {ex} | {notes} |"
+                f"| **{inst}** | {dir_c} | {chk} | {mtf} | {sme} | {svi} | {eplus} | {combo} | {ex} | {sig} | {notes} |"
             )
     lines.append("")
     return lines
@@ -247,8 +270,8 @@ def render_reflection_table_markdown(scans: List[InstrumentMTFScan]) -> List[str
         sfm = sme.sfm_label if sme and sme.sfm_active else "—"
         rqs = f"{sme.rqs_last:+d}" if sme and sme.rqs_last is not None else "—"
         lines.append(
-            f"| **{s.display_name}** | {r.signal_name} | {sme.spc if sme else 0} | {sse} | {sfm} | {rqs} | "
-            f"{sme.svi_weight if sme else 0:+d} | **{sme.edge_plus if sme else 0}** | {sme.src_summary if sme else '—'} |"
+            f"| **{s.display_name}** | {signal_chip(r.signal_name)} | {sme.spc if sme else 0} | {sse} | {sfm} | {rqs} | "
+            f"{sme.svi_weight if sme else 0:+d} | {edge_plus_chip(sme.edge_plus if sme else 0)} | {sme.src_summary if sme else '—'} |"
         )
     lines.append("")
     return lines
@@ -297,14 +320,17 @@ def render_terminal_matrix_markdown(scans: List[InstrumentMTFScan]) -> List[str]
     lines = [
         "## GEM Terminal Matrix (Logic 1.5)",
         "",
-        "_Columns match TradingView dashboard: R1–R3 (RSI cycle), D1–D3 (divergence tiers), "
-        "MF/MV (MFI zone + divergence), CDL (candle), GM (universal GEM), Score (0–11)._",
+        "_Columns match TradingView dashboard. Cells use 🟢 Emerald / 🔴 Ruby / ⚪ neutral + hex codes._",
         "",
     ]
     for scan in scans:
         if not scan.dashboards:
             continue
-        lines.append(f"### {scan.display_name}")
+        cr = scan.combined_rating
+        head = scan.display_name
+        if cr:
+            head = f"{head} — {direction_chip(cr.direction)}"
+        lines.append(f"### {head}")
         lines.append("")
         header = "| TF | " + " | ".join(DASHBOARD_COLS) + " |"
         sep = "|----|" + "|".join(["---"] * len(DASHBOARD_COLS)) + "|"
@@ -315,7 +341,7 @@ def render_terminal_matrix_markdown(scans: List[InstrumentMTFScan]) -> List[str]
             if not d:
                 lines.append(f"| {TF_SHORT.get(tf, tf)} | " + " | ".join(["—"] * len(DASHBOARD_COLS)) + " |")
                 continue
-            cells = d.row_cells()
+            cells = coloured_dashboard_row(d)
             lines.append(f"| {TF_SHORT.get(tf, tf)} | " + " | ".join(cells) + " |")
         lines.append("")
     return lines
@@ -362,13 +388,16 @@ def render_timeframe_tables_markdown(scans: List[InstrumentMTFScan]) -> List[str
         for row in build_timeframe_table_rows(scans, tf):
             inst, score, strength, direction, rsi, mfi, combo, eplus, signal, notes = row
             score_s = f"{score:+d}" if score else "0"
-            str_cell = f"{strength_badge(strength)} {strength}"
-            if direction in ("BULLISH", "BEARISH"):
-                str_cell += f" {direction.lower()}"
+            if direction == "BULLISH":
+                score_s = f"{CHIP_BULL} {score_s}"
+            elif direction == "BEARISH":
+                score_s = f"{CHIP_BEAR} {score_s}"
+            str_cell = mtf_strength_chip(strength, direction, strength_badge(strength))
             rsi_s = f"{rsi:.1f}" if rsi else "—"
             mfi_s = f"{mfi:.0f}" if mfi else "—"
             lines.append(
-                f"| **{inst}** | {score_s} | {str_cell} | {signal} | {rsi_s} | {mfi_s} | {combo}/4 | **{eplus}** | {notes} |"
+                f"| **{inst}** | {score_s} | {str_cell} | {signal_chip(signal)} | {rsi_s} | {mfi_s} | "
+                f"{combo}/4 | {edge_plus_chip(eplus)} | {notes} |"
             )
         lines.append("")
     return lines

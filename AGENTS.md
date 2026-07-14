@@ -15,7 +15,7 @@ cd /workspace && source .venv/bin/activate
 python scripts/cloud_gem_report.py  # 4 TFs: 15m, 1h, 4h, daily + strength + checklist
 ```
 
-Read **`reports/latest_gem_report.md`** (MTF strength table + **GEM Terminal Matrix** Logic 1.5 + 6-point checklist) and summarize actionable signals (EMERALD GEM, RUBY GEM, setups, entries).
+Read **`reports/latest_gem_report.md`** (colour-coded 🟢 Emerald / 🔴 Ruby / ⚪ neutral + hex tags, MTF strength, **GEM Terminal Matrix**, checklist) and summarize actionable signals.
 
 **GEM Logic 1.5 dashboard** (Pine `f_local_tf_pack` port): columns R1–R3, D1–D3, MF, MV, CDL, GM, Score 0–11 per TF — see `docs/gem-logic-1.5.md` and `src/gem/dashboard.py`.
 

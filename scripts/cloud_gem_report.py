@@ -14,6 +14,7 @@ from src.heatmap_data import mtf_rows_to_dataframe
 from src.gem_my_list import (
     PRODUCT_NAME,
     build_gem_my_list_rows,
+    render_colour_legend_markdown,
     render_gem_my_list_markdown,
     render_reflection_table_markdown,
     render_terminal_matrix_markdown,
@@ -77,14 +78,16 @@ def build_and_write_report(
     payload["gem_my_list"] = [
         {
             "instrument": r[0],
-            "checklist": r[1],
-            "mtf": r[2],
-            "sme_h1": r[3],
-            "svi": r[4],
-            "edge_plus": r[5],
-            "combo_h1": r[6],
-            "exec_tier": r[7],
-            "notes": r[8],
+            "direction": r[1],
+            "checklist": r[2],
+            "mtf": r[3],
+            "sme_h1": r[4],
+            "svi": r[5],
+            "edge_plus": r[6],
+            "combo_h1": r[7],
+            "exec_tier": r[8],
+            "signal": r[9],
+            "notes": r[10],
         }
         for r in build_gem_my_list_rows(mtf_scans)
     ]
@@ -100,6 +103,7 @@ def build_and_write_report(
         "**Layers:** GEM Logic · EDGE (RSI+MFI+vol) · **SME** (SFM/SSE/SPC/RQS) · **SVI** (instrument profile)",
         "",
     ]
+    lines.extend(render_colour_legend_markdown())
     lines.extend(render_gem_my_list_markdown(mtf_scans, trade_ready_only=True))
     if payload["trade_ready"] == 0:
         lines.append("_No trade-ready rows; see full board below._")
