@@ -48,23 +48,35 @@ Default refresh: **5 minutes** (`GEM_REFRESH_MINUTES` env).
 
 ### GEM My List (compact trade board)
 
-User phrase: **"GEM my list"** (also: **gemlist**, **my list**, **scan**).
+User phrase: **"GEM my list"** (also: **gemlist**, **mylist**, **gemboard**, **scan**).
 
-Shows: `Instrument | Checklist | MTF | Notes` — trade-ready first, then full watchlist.
+**Always include colour codes** — no need for the user to ask separately:
+
+| Chip | Meaning | Hex |
+|------|---------|-----|
+| 🟢 | Bull / Emerald / OS / long | `#00c896` |
+| 🔴 | Bear / Ruby / OB / short | `#c62828` |
+| 🟡 | WARNING / partial checklist | `#f0ad4e` |
+| ⚪ | Neutral / WAIT | `#9e9e9e` |
+
+Report must show: **colour legend** → trade board (Dir · Checklist · MTF · Signal · Exec · EDGE+ with chips) → terminal matrix (coloured cells) → TF tables.
+
+Custom watchlist: `config/watchlist_user_today.json` if the user pasted a one-off list; else `config/watchlist.json`.
 
 ```bash
-cd /workspace && source .venv/bin/activate
-python scripts/gem_my_list.py
+cd /workspace && PYTHONPATH=/workspace python scripts/gem_my_list.py
+# or
+PYTHONPATH=/workspace python scripts/gem_scan_pipeline.py
 ```
 
-Same as `cloud_gem_report.py`; report title starts with **GEM My List**.
+Same output path: **`reports/latest_gem_report.md`** (title **GEM My List**). When replying in chat, use the same 🟢/🔴/⚪ chips in tables — do not strip colours.
 
 Also includes **4 separate score tables**: M15 → H1 → H4 → Daily (all instruments each).
 User may say: **"GEM 4 tables"** or **"scores by timeframe"**.
 
 ### User-facing phrases
 
-- **"GEM my list"** / **"gemlist"** / **"scan my instruments"** → `gem_my_list.py` or `cloud_gem_report.py`
+- **"GEM my list"** / **"gemlist"** / **"scan my instruments"** → `gem_my_list.py` or `cloud_gem_report.py` — **always colour-coded** (legend + chips in board and matrix)
 - "Add TSLA" → edit `config/watchlist.json`
 - They do **not** need local install steps
 

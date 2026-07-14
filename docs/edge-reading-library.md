@@ -153,7 +153,7 @@ VPA, Wyckoff, order flow. **EDGE:** высший приоритет после �
 
 | Фраза | Результат |
 |-------|-----------|
-| **GEM my list** | Trade board + 4 TF tables |
+| **GEM my list** | Trade board + 4 TF tables + **colour codes** (🟢/🔴/⚪ + hex) |
 | **gemlist** | то же |
 | **4 tables** | только M15 / H1 / H4 / D1 |
 

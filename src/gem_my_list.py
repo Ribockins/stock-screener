@@ -1,4 +1,8 @@
-"""GEM My List — compact trade board + per-timeframe score tables."""
+"""GEM My List — compact trade board + per-timeframe score tables.
+
+Always colour-coded: 🟢 Emerald `#00c896` / 🔴 Ruby `#c62828` / 🟡 WARNING / ⚪ neutral.
+User phrases "GEM my list", "gemlist", "mylist" imply colour codes + legend — never plain text only.
+"""
 
 from __future__ import annotations
 
