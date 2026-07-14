@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Tuple
 
+from src.gem.dashboard import TFDashboardState
 from src.gem.timeframes import DEFAULT_TIMEFRAMES, TF_SHORT
 from src.gem_platform import InstrumentMTFScan
 from src.execution_tier import TIER_WAIT, execution_tier, tier_label
@@ -282,6 +283,67 @@ def build_timeframe_table_rows(
         )
     rows.sort(key=lambda x: abs(x[1]), reverse=True)
     return rows
+
+
+DASHBOARD_COLS = ("R1", "R2", "R3", "D1", "D2", "D3", "MF", "MV", "CDL", "GM", "Score")
+
+
+def _dashboard_row_cells(d: TFDashboardState) -> str:
+    return " · ".join(d.row_cells())
+
+
+def render_terminal_matrix_markdown(scans: List[InstrumentMTFScan]) -> List[str]:
+    """GEM Logic 1.5 terminal dashboard — one table per instrument (rows = TF)."""
+    lines = [
+        "## GEM Terminal Matrix (Logic 1.5)",
+        "",
+        "_Columns match TradingView dashboard: R1–R3 (RSI cycle), D1–D3 (divergence tiers), "
+        "MF/MV (MFI zone + divergence), CDL (candle), GM (universal GEM), Score (0–11)._",
+        "",
+    ]
+    for scan in scans:
+        if not scan.dashboards:
+            continue
+        lines.append(f"### {scan.display_name}")
+        lines.append("")
+        header = "| TF | " + " | ".join(DASHBOARD_COLS) + " |"
+        sep = "|----|" + "|".join(["---"] * len(DASHBOARD_COLS)) + "|"
+        lines.append(header)
+        lines.append(sep)
+        for tf in DEFAULT_TIMEFRAMES:
+            d = scan.dashboards.get(tf)
+            if not d:
+                lines.append(f"| {TF_SHORT.get(tf, tf)} | " + " | ".join(["—"] * len(DASHBOARD_COLS)) + " |")
+                continue
+            cells = d.row_cells()
+            lines.append(f"| {TF_SHORT.get(tf, tf)} | " + " | ".join(cells) + " |")
+        lines.append("")
+    return lines
+
+
+def terminal_matrix_payload(scans: List[InstrumentMTFScan]) -> Dict[str, dict]:
+    out: Dict[str, dict] = {}
+    for scan in scans:
+        rows = {}
+        for tf, d in scan.dashboards.items():
+            rows[tf] = {
+                "r1": d.r1,
+                "r2": d.r2,
+                "r3": d.r3,
+                "d1": d.d1,
+                "d2": d.d2,
+                "d3": d.d3,
+                "mf": d.mf,
+                "mv": d.mv,
+                "cdl": d.cdl,
+                "gm": d.gm,
+                "bias": d.bias,
+                "score": d.score,
+                "cells": d.row_cells(),
+            }
+        if rows:
+            out[scan.symbol] = rows
+    return out
 
 
 def render_timeframe_tables_markdown(scans: List[InstrumentMTFScan]) -> List[str]:

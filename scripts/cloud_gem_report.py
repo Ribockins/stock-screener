@@ -16,7 +16,9 @@ from src.gem_my_list import (
     build_gem_my_list_rows,
     render_gem_my_list_markdown,
     render_reflection_table_markdown,
+    render_terminal_matrix_markdown,
     render_timeframe_tables_markdown,
+    terminal_matrix_payload,
     timeframe_tables_payload,
 )
 from src.watchlist import load_watchlist
@@ -108,6 +110,8 @@ def build_and_write_report(
     lines.extend(render_reflection_table_markdown(mtf_scans))
 
     payload["timeframe_tables"] = timeframe_tables_payload(mtf_scans)
+    payload["terminal_matrix"] = terminal_matrix_payload(mtf_scans)
+    lines.extend(render_terminal_matrix_markdown(mtf_scans))
     lines.extend(render_timeframe_tables_markdown(mtf_scans))
 
     lines.append("## Strength heatmap (compact)")

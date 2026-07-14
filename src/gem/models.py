@@ -2,7 +2,10 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, Optional
+from typing import TYPE_CHECKING, Dict, Optional
+
+if TYPE_CHECKING:
+    from src.gem.dashboard import TFDashboardState
 
 
 @dataclass
@@ -40,10 +43,15 @@ class GEMAnalysis:
   tp1_price: Optional[float] = None
   tp2_price: Optional[float] = None
 
-  gem_score: int = 0  # 0–4 per-TF style score on chart TF
+  gem_score: int = 0  # legacy 0–4; prefer dashboard_score (0–11) when set
+  dashboard_score: int = 0  # GEM 1.5 terminal score (0–11)
+  dashboard_bias: int = 0  # -1 bear, 0 neutral, +1 bull
+  dashboard: Optional["TFDashboardState"] = None
+
   mtf_ob_count: int = 0
   mtf_os_count: int = 0
   mtf_scores: Dict[str, int] = field(default_factory=dict)
+  mtf_dashboard: Dict[str, "TFDashboardState"] = field(default_factory=dict)
 
   recommendation: str = ""
   data_source: str = ""
@@ -76,6 +84,8 @@ class GEMAnalysis:
       "tp1_price": self.tp1_price,
       "tp2_price": self.tp2_price,
       "gem_score": self.gem_score,
+      "dashboard_score": self.dashboard_score,
+      "dashboard_bias": self.dashboard_bias,
       "mtf_ob_count": self.mtf_ob_count,
       "mtf_os_count": self.mtf_os_count,
       "mtf_scores": self.mtf_scores,

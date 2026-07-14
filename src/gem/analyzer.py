@@ -10,6 +10,7 @@ import pandas as pd
 
 from src.gem.candles import detect_candle_signals
 from src.gem.config import GEMConfig
+from src.gem.dashboard import compute_tf_dashboard, infer_interval_seconds
 from src.gem.models import GEMAnalysis
 from src.gem.rsi import calculate_rsi
 
@@ -20,7 +21,13 @@ class GEMAnalyzer:
     def __init__(self, config: Optional[GEMConfig] = None):
         self.config = config or GEMConfig()
 
-    def analyze(self, symbol: str, df: pd.DataFrame, data_source: str = "") -> Optional[GEMAnalysis]:
+    def analyze(
+        self,
+        symbol: str,
+        df: pd.DataFrame,
+        data_source: str = "",
+        interval_seconds: Optional[int] = None,
+    ) -> Optional[GEMAnalysis]:
         df = self._normalize_ohlcv(df)
         if df is None or len(df) < self.config.rsi_length + 10:
             return None
@@ -135,6 +142,11 @@ class GEMAnalyzer:
             bull_candle.iloc[i], bear_candle.iloc[i], buy_gem_raw.iloc[i] or sell_gem_raw.iloc[i],
         )
 
+        sec = interval_seconds if interval_seconds is not None else infer_interval_seconds(df.index)
+        dashboard = compute_tf_dashboard(df, self.config, interval_seconds=sec)
+        dashboard_score = dashboard.score if dashboard else gem_score
+        dashboard_bias = dashboard.bias if dashboard else 0
+
         ts = df.index[i]
         if not isinstance(ts, datetime):
             ts = datetime.utcnow()
@@ -171,6 +183,9 @@ class GEMAnalyzer:
             tp1_price=tp1,
             tp2_price=tp2,
             gem_score=gem_score,
+            dashboard_score=dashboard_score,
+            dashboard_bias=dashboard_bias,
+            dashboard=dashboard,
             recommendation=rec,
             data_source=data_source,
         )
