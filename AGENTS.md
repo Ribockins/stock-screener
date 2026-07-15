@@ -31,6 +31,16 @@ python scripts/finviz_top_cap_gem.py
 
 Read **`reports/finviz_top_cap_gem.md`**.
 
+### Finviz custom screen (rel vol / avg vol filters)
+
+Paste tickers into **`config/watchlist_finviz_screen.json`** (Finviz blocks auto-fetch in cloud).
+
+```bash
+cd /workspace && PYTHONPATH=/workspace python scripts/finviz_screen_gem.py
+```
+
+Colour-coded **GEM My List** → `reports/gem_my_list_finviz.md`
+
 ### Watchlist
 
 Edit **`config/watchlist.json`** when the user asks to add/remove symbols.
