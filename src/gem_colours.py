@@ -106,6 +106,31 @@ def dashboard_score_cell(score: int, bias: int) -> str:
     return f"{CHIP_NEUTRAL} **{score}** {hex_tag(C_NEUTRAL)}"
 
 
+def mtf_summary_cell(score: int, bias: int, gem_active: bool) -> str:
+    """
+    Compact MTF summary cell for GEM_my_list scanner table.
+
+    Score ≥ 9 + GEM → bright core colour; 6–8 medium; 3–5 faint; 0–2 grey.
+    """
+    arrow = "▲" if bias > 0 else ("▼" if bias < 0 else "–")
+    gem_tag = " GEM" if gem_active else ""
+    label = f"{score} {arrow}{gem_tag}".strip()
+
+    if score <= 2 or bias == 0:
+        return f"{CHIP_NEUTRAL} {label} {hex_tag(C_NEUTRAL)}"
+    if bias > 0:
+        if score >= 9 and gem_active:
+            return f"{CHIP_BULL} **{label}** {hex_tag(C_EMERALD_CORE)}"
+        if score >= 6:
+            return f"{CHIP_BULL} **{label}** {hex_tag(C_EMERALD)}"
+        return f"{CHIP_BULL} {label} {hex_tag(C_EMERALD)}"
+    if score >= 9 and gem_active:
+        return f"{CHIP_BEAR} **{label}** {hex_tag(C_RUBY_CORE)}"
+    if score >= 6:
+        return f"{CHIP_BEAR} **{label}** {hex_tag(C_RUBY)}"
+    return f"{CHIP_BEAR} {label} {hex_tag(C_RUBY)}"
+
+
 def edge_plus_chip(value: int | str) -> str:
     try:
         v = int(value)

@@ -6,11 +6,14 @@ User phrases "GEM my list", "gemlist", "mylist" imply colour codes + legend — 
 
 from __future__ import annotations
 
-from typing import Dict, List, Tuple
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
 
+from src.gem.backtest import BacktestConfig, BacktestResult, backtest_rows, run_backtest_batch
+from src.gem.config import GEMConfig
 from src.gem.dashboard import TFDashboardState
 from src.gem.timeframes import DEFAULT_TIMEFRAMES, TF_SHORT
-from src.gem_platform import InstrumentMTFScan
+from src.gem_platform import GEMPlatform, InstrumentMTFScan
 from src.execution_tier import TIER_WAIT, execution_tier, tier_label
 from src.gem_colours import (
     CHIP_BEAR,
@@ -21,6 +24,7 @@ from src.gem_colours import (
     direction_chip,
     edge_plus_chip,
     mtf_strength_chip,
+    mtf_summary_cell,
     signal_chip,
     tier_chip,
 )
@@ -426,3 +430,96 @@ def timeframe_tables_payload(scans: List[InstrumentMTFScan]) -> Dict[str, list]:
             for r in build_timeframe_table_rows(scans, tf)
         ]
     return out
+
+
+def render_mtf_summary_table_markdown(scans: List[InstrumentMTFScan]) -> List[str]:
+    """Compact instrument × timeframe score board (Technical Brief Task 2A)."""
+    tf_headers = [TF_SHORT.get(tf, tf) for tf in DEFAULT_TIMEFRAMES]
+    lines = [
+        "## MTF score summary",
+        "",
+        "_Per TF: score, direction (▲/▼), GEM tag when universal GEM fired on last bar._",
+        "",
+        "| Instrument | " + " | ".join(tf_headers) + " |",
+        "|------------|" + "|".join(["---"] * len(tf_headers)) + "|",
+    ]
+    for scan in scans:
+        cells = []
+        for tf in DEFAULT_TIMEFRAMES:
+            d = scan.dashboards.get(tf)
+            if not d:
+                cells.append("—")
+                continue
+            gem_active = d.gm != 0
+            cells.append(mtf_summary_cell(d.score, d.bias, gem_active))
+        lines.append(f"| **{scan.display_name}** | " + " | ".join(cells) + " |")
+    lines.append("")
+    return lines
+
+
+def render_backtest_table_markdown(results: List[BacktestResult]) -> List[str]:
+    """Auto backtest report table (Technical Brief Task 2B)."""
+    lines = [
+        "## GEM backtest (H1 / H4)",
+        "",
+        "_Entry: GEM edge + score ≥ 7 · Exit: confluence lost or score < 5 · Stop: swing · Target: 2R · closed bars only._",
+        "",
+        "| Instrument | TF | Trades | Win % | Avg R:R | Best | Worst | Max DD |",
+        "|------------|-----|--------|-------|---------|------|-------|--------|",
+    ]
+    for row in backtest_rows(results):
+        inst, tf, trades, win, avg, best, worst, dd, note = row
+        if note:
+            lines.append(f"| **{inst}** | {tf} | — | — | — | — | — | — | _{note}_ |")
+        else:
+            lines.append(
+                f"| **{inst}** | {tf} | {trades} | {win} | {avg} | {best} | {worst} | {dd} |"
+            )
+    lines.append("")
+    return lines
+
+
+@dataclass
+class GEMMyListResult:
+    """Programmatic result of ``run_gem_my_list()``."""
+
+    scans: List[InstrumentMTFScan]
+    backtest_results: List[BacktestResult]
+    watchlist: dict
+
+
+def run_gem_my_list(
+    instruments: Optional[List[dict]] = None,
+    *,
+    watchlist: Optional[dict] = None,
+    bars: int = 120,
+    run_backtest: bool = True,
+    backtest_bars: int = 500,
+    gem_config: Optional[GEMConfig] = None,
+    bt_config: Optional[BacktestConfig] = None,
+) -> GEMMyListResult:
+    """
+    Scan a list of instruments across M15/H1/H4/D and optionally run H1/H4 backtests.
+
+    This is the formal Python API for **GEM my list** (Technical Brief Task 2).
+    """
+    wl = dict(watchlist or {})
+    if instruments is not None:
+        wl["instruments"] = instruments
+    wl.setdefault("bars", bars)
+    wl.setdefault("timeframes", DEFAULT_TIMEFRAMES)
+
+    platform = GEMPlatform(gem_config=gem_config)
+    scans = platform.scan_watchlist_mtf(wl)
+
+    bt_results: List[BacktestResult] = []
+    if run_backtest and wl.get("instruments"):
+        bt_results = run_backtest_batch(
+            wl["instruments"],
+            bars=backtest_bars,
+            gem_config=gem_config,
+            bt_config=bt_config,
+            market=platform.market,
+        )
+
+    return GEMMyListResult(scans=scans, backtest_results=bt_results, watchlist=wl)

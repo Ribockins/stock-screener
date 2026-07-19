@@ -43,7 +43,24 @@ Python: `src/gem/dashboard.py` — `TFDashboardState` / `compute_tf_dashboard()`
 After `python3 scripts/gem_scan_pipeline.py`:
 
 - **GEM My List** — trade board + reflection + **GEM Terminal Matrix** per instrument
-- JSON: `reports/latest_gem_scan.json` → `terminal_matrix`
+- **MTF score summary** — compact instrument × TF table (score + ▲/▼ + GEM tag)
+- **GEM backtest** — H1/H4 auto backtest table (closed bars, no lookahead)
+- JSON: `reports/latest_gem_scan.json` → `terminal_matrix`, `backtest`
+
+### GEM_my_list API (Python)
+
+```python
+from src.gem_my_list import run_gem_my_list
+
+result = run_gem_my_list(
+    instruments=[{"symbol": "CL=F", "display_name": "WTI"}],
+    run_backtest=True,
+)
+# result.scans — MTF InstrumentMTFScan list
+# result.backtest_results — H1/H4 BacktestResult list
+```
+
+Backtest rules (`src/gem/backtest.py`): entry on GEM edge + score ≥ 7; exit when confluence lost or score < 5; swing stop; 2R target.
 
 ## R-cycle window (hours → bars)
 

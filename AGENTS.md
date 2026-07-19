@@ -98,6 +98,19 @@ Konспект по названиям: **`docs/edge-reading-library.md`** (то�
 
 - Code: `src/gem/` + `src/gem_platform.py`
 - Defaults: RSI 14, OS 28, OB 72, 3 divergence events, 8-bar GEM window
+- **Logic 1.5 port:** `src/gem/dashboard.py` (cycle state machine, score 0–11, `compute_dashboard_series` for backtest)
+- **Backtest:** `src/gem/backtest.py` — auto H1/H4 table in reports
+- **Formal API:** `run_gem_my_list()` in `src/gem_my_list.py` — pass instrument list, get scans + backtest
+- Full spec: `docs/gem-logic-1.5.md` + Technical Brief (engine upgrade, scanner, no EMA, hand MFI, D3=2pts)
+
+### Technical Brief principles (do not violate)
+
+1. No EMA in signal engine
+2. MFI hand-calculated (`src/edge_combos.calculate_mfi`) — not library `ta.mfi`
+3. RSI cycle state machine preserved exactly (`dashboard.py`)
+4. Backtest: closed bars only, no lookahead
+5. Score D3 = 2 points (double weight)
+6. GEM signal is binary (edge-fired or not)
 
 ### Data
 

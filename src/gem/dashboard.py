@@ -180,13 +180,61 @@ def _bars_since(cond: np.ndarray, i: int) -> int:
     return 100_000
 
 
-def compute_tf_dashboard(
+def _state_from_row(
+    r1_state: int,
+    r2_state: int,
+    r3_state: int,
+    d1_state: int,
+    d2_state: int,
+    d3_state: int,
+    m_state: int,
+    mv_state: int,
+    c_state: int,
+    gm_state: int,
+    bias: int,
+    score: int,
+) -> TFDashboardState:
+    pack = pack_dashboard(
+        r1_state,
+        r2_state,
+        r3_state,
+        d1_state,
+        d2_state,
+        d3_state,
+        m_state,
+        mv_state,
+        c_state,
+        gm_state,
+        bias,
+        score,
+    )
+    return TFDashboardState(
+        r1=r1_state,
+        r2=r2_state,
+        r3=r3_state,
+        d1=d1_state,
+        d2=d2_state,
+        d3=d3_state,
+        mf=m_state,
+        mv=mv_state,
+        cdl=c_state,
+        gm=gm_state,
+        bias=bias,
+        score=score,
+        pack=pack,
+    )
+
+
+def compute_dashboard_series(
     df: pd.DataFrame,
     config: Optional[GEMConfig] = None,
     interval_seconds: Optional[int] = None,
-) -> Optional[TFDashboardState]:
+) -> Optional[pd.DataFrame]:
     """
-    Run the full GEM 1.5 dashboard engine and return state at the last bar.
+    Run the GEM 1.5 dashboard engine bar-by-bar.
+
+    Returns a DataFrame aligned to ``df`` with score, bias, GM edge flags, and raw GEM confluence.
+    Used for point-in-time backtests (no lookahead).
     """
     if df is None or df.empty:
         return None
@@ -245,7 +293,22 @@ def compute_tf_dashboard(
     buy_gem_raw_prev = False
     sell_gem_raw_prev = False
 
-    last_state: Optional[TFDashboardState] = None
+    scores = np.full(n, np.nan)
+    biases = np.full(n, np.nan)
+    gm_states = np.full(n, np.nan)
+    r1_arr = np.full(n, np.nan)
+    r2_arr = np.full(n, np.nan)
+    r3_arr = np.full(n, np.nan)
+    d1_arr = np.full(n, np.nan)
+    d2_arr = np.full(n, np.nan)
+    d3_arr = np.full(n, np.nan)
+    mf_arr = np.full(n, np.nan)
+    mv_arr = np.full(n, np.nan)
+    cdl_arr = np.full(n, np.nan)
+    buy_gem_raw_arr = np.zeros(n, dtype=bool)
+    sell_gem_raw_arr = np.zeros(n, dtype=bool)
+    buy_gem_arr = np.zeros(n, dtype=bool)
+    sell_gem_arr = np.zeros(n, dtype=bool)
 
     for i in range(n):
         if np.isnan(rsi[i]):
@@ -438,34 +501,78 @@ def compute_tf_dashboard(
         else:
             bias = 0
 
-        pack = pack_dashboard(
-            r1_state,
-            r2_state,
-            r3_state,
-            d1_state,
-            d2_state,
-            d3_state,
-            m_state,
-            mv_state,
-            c_state,
-            gm_state,
-            bias,
-            score,
-        )
-        last_state = TFDashboardState(
-            r1=r1_state,
-            r2=r2_state,
-            r3=r3_state,
-            d1=d1_state,
-            d2=d2_state,
-            d3=d3_state,
-            mf=m_state,
-            mv=mv_state,
-            cdl=c_state,
-            gm=gm_state,
-            bias=bias,
-            score=score,
-            pack=pack,
-        )
+        scores[i] = score
+        biases[i] = bias
+        gm_states[i] = gm_state
+        r1_arr[i] = r1_state
+        r2_arr[i] = r2_state
+        r3_arr[i] = r3_state
+        d1_arr[i] = d1_state
+        d2_arr[i] = d2_state
+        d3_arr[i] = d3_state
+        mf_arr[i] = m_state
+        mv_arr[i] = mv_state
+        cdl_arr[i] = c_state
+        buy_gem_raw_arr[i] = buy_gem_raw
+        sell_gem_raw_arr[i] = sell_gem_raw
+        buy_gem_arr[i] = gm_state == 1
+        sell_gem_arr[i] = gm_state == -1
 
-    return last_state
+    return pd.DataFrame(
+        {
+            "score": scores,
+            "bias": biases,
+            "gm": gm_states,
+            "r1": r1_arr,
+            "r2": r2_arr,
+            "r3": r3_arr,
+            "d1": d1_arr,
+            "d2": d2_arr,
+            "d3": d3_arr,
+            "mf": mf_arr,
+            "mv": mv_arr,
+            "cdl": cdl_arr,
+            "buy_gem_raw": buy_gem_raw_arr,
+            "sell_gem_raw": sell_gem_raw_arr,
+            "buy_gem": buy_gem_arr,
+            "sell_gem": sell_gem_arr,
+            "open": out["open"].values,
+            "high": high,
+            "low": low,
+            "close": close,
+        },
+        index=out.index,
+    )
+
+
+def compute_tf_dashboard(
+    df: pd.DataFrame,
+    config: Optional[GEMConfig] = None,
+    interval_seconds: Optional[int] = None,
+) -> Optional[TFDashboardState]:
+    """
+    Run the full GEM 1.5 dashboard engine and return state at the last bar.
+    """
+    series = compute_dashboard_series(df, config=config, interval_seconds=interval_seconds)
+    if series is None or series.empty:
+        return None
+
+    valid = series["score"].notna()
+    if not valid.any():
+        return None
+
+    row = series.loc[valid].iloc[-1]
+    return _state_from_row(
+        int(row["r1"]),
+        int(row["r2"]),
+        int(row["r3"]),
+        int(row["d1"]),
+        int(row["d2"]),
+        int(row["d3"]),
+        int(row["mf"]),
+        int(row["mv"]),
+        int(row["cdl"]),
+        int(row["gm"]) if not np.isnan(row["gm"]) else 0,
+        int(row["bias"]),
+        int(row["score"]),
+    )
