@@ -12,6 +12,10 @@ class GEMConfig:
   lookback_bars: int = 84
   div_count_required: int = 3
 
+  mfi_length: int = 14
+  mfi_overbought: float = 80.0
+  mfi_oversold: float = 20.0
+
   signal_life_bars: int = 4
   stop_buffer_pct: float = 0.15
   tp1_rr: float = 1.0

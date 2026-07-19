@@ -12,6 +12,14 @@ SCAN_TIMEFRAMES: List[Tuple[str, str]] = [
 
 DEFAULT_TIMEFRAMES = [k for k, _ in SCAN_TIMEFRAMES]
 
+# Bar interval in seconds (for GEM 1.5 R-cycle window)
+TF_INTERVAL_SECONDS: Dict[str, int] = {
+    "15": 900,
+    "60": 3600,
+    "240": 14400,
+    "1d": 86400,
+}
+
 TF_LABELS: Dict[str, str] = {k: label for k, label in SCAN_TIMEFRAMES}
 
 TF_SHORT: Dict[str, str] = {

@@ -8,8 +8,9 @@ from typing import Dict, List, Optional
 from src.edge_engine import EdgeBarSignals, analyze_edge_bar
 from src.gem.analyzer import GEMAnalyzer
 from src.gem.config import GEMConfig
+from src.gem.dashboard import TFDashboardState
 from src.gem.models import GEMAnalysis
-from src.gem.timeframes import DEFAULT_TIMEFRAMES, TF_SHORT
+from src.gem.timeframes import DEFAULT_TIMEFRAMES, TF_SHORT, TF_INTERVAL_SECONDS
 from src.gem_strength import (
     STRENGTH_RANK,
     GemStrengthRating,
@@ -33,6 +34,7 @@ class InstrumentMTFScan:
     ratings: Dict[str, GemStrengthRating] = field(default_factory=dict)
     edge_signals: Dict[str, EdgeBarSignals] = field(default_factory=dict)
     sme_scores: Dict[str, SMELiveScore] = field(default_factory=dict)
+    dashboards: Dict[str, TFDashboardState] = field(default_factory=dict)
     combined_rating: Optional[GemStrengthRating] = None
     checklist: Optional[ScanChecklist] = None
 
@@ -115,14 +117,22 @@ class GEMPlatform:
                     logger.warning("No data for %s @ %s", sym, tf)
                     continue
                 df, source = fetched[sym]
-                analysis = self.analyzer.analyze(sym, df, data_source=f"{source}/{TF_SHORT.get(tf, tf)}")
+                interval_sec = TF_INTERVAL_SECONDS.get(str(tf))
+                analysis = self.analyzer.analyze(
+                    sym,
+                    df,
+                    data_source=f"{source}/{TF_SHORT.get(tf, tf)}",
+                    interval_seconds=interval_sec,
+                )
                 if analysis:
                     row.analyses[tf] = analysis
+                    if analysis.dashboard:
+                        row.dashboards[tf] = analysis.dashboard
                     row.ratings[tf] = rate_gem_analysis(analysis, tf)
                     edge = analyze_edge_bar(
                         df,
                         rsi_period=self.gem_config.rsi_length,
-                        mfi_period=self.gem_config.rsi_length,
+                        mfi_period=self.gem_config.mfi_length,
                     )
                     if edge:
                         row.edge_signals[tf] = edge

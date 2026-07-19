@@ -1,12 +1,33 @@
-"""GEM My List — compact trade board + per-timeframe score tables."""
+"""GEM My List — compact trade board + per-timeframe score tables.
+
+Always colour-coded: 🟢 Emerald `#00c896` / 🔴 Ruby `#c62828` / 🟡 WARNING / ⚪ neutral.
+User phrases "GEM my list", "gemlist", "mylist" imply colour codes + legend — never plain text only.
+"""
 
 from __future__ import annotations
 
-from typing import Dict, List, Tuple
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
 
+from src.gem.backtest import BacktestConfig, BacktestResult, backtest_rows, run_backtest_batch
+from src.gem.config import GEMConfig
+from src.gem.dashboard import TFDashboardState
 from src.gem.timeframes import DEFAULT_TIMEFRAMES, TF_SHORT
-from src.gem_platform import InstrumentMTFScan
+from src.gem_platform import GEMPlatform, InstrumentMTFScan
 from src.execution_tier import TIER_WAIT, execution_tier, tier_label
+from src.gem_colours import (
+    CHIP_BEAR,
+    CHIP_BULL,
+    checklist_chip,
+    colour_legend_lines,
+    coloured_dashboard_row,
+    direction_chip,
+    edge_plus_chip,
+    mtf_strength_chip,
+    mtf_summary_cell,
+    signal_chip,
+    tier_chip,
+)
 from src.gem_strength import strength_badge
 
 
@@ -150,16 +171,24 @@ def _tf_notes(scan: InstrumentMTFScan, tf: str) -> str:
 def format_mtf_cell(scan: InstrumentMTFScan) -> str:
     cr = scan.combined_rating
     if not cr:
-        return "—"
-    return f"{strength_badge(cr.strength)} {cr.strength} {cr.direction.lower()}"
+        return neutral_fallback()
+    return mtf_strength_chip(cr.strength, cr.direction, strength_badge(cr.strength))
+
+
+def neutral_fallback() -> str:
+    from src.gem_colours import neutral_chip
+    return neutral_chip("—")
 
 
 def format_checklist_cell(scan: InstrumentMTFScan) -> str:
     cl = scan.checklist
     if not cl:
-        return "—"
-    mark = "✅" if cl.trade_ok else ("⚠️" if cl.score >= 4 else "—")
-    return f"{cl.score}/6 {mark}"
+        return neutral_fallback()
+    return checklist_chip(cl.score, cl.trade_ok)
+
+
+def render_colour_legend_markdown() -> List[str]:
+    return colour_legend_lines()
 
 
 def build_gem_my_list_rows(
@@ -181,24 +210,27 @@ def build_gem_my_list_rows(
         )
         sme_h1 = s.sme_scores.get("60")
         edge_plus = sme_h1.edge_plus if sme_h1 else 0
+        dir_chip = direction_chip(cr.direction if cr else "NEUTRAL")
         rows.append(
             (
                 s.display_name,
+                dir_chip,
                 format_checklist_cell(s),
                 format_mtf_cell(s),
                 format_sme_cell(s),
                 format_svi_cell(s),
-                str(edge_plus) if sme_h1 else "—",
+                edge_plus_chip(edge_plus) if sme_h1 else neutral_fallback(),
                 format_edge_cell(s),
-                tier,
+                tier_chip(tier),
+                signal_chip(cr.signal_name if cr else "—"),
                 _notes(s),
                 prio,
                 score,
                 edge_plus,
             )
         )
-    rows.sort(key=lambda r: (r[9], r[10], r[11]), reverse=True)
-    return [tuple(r[:9]) for r in rows]
+    rows.sort(key=lambda r: (r[11], r[12], r[13]), reverse=True)
+    return [tuple(r[:11]) for r in rows]
 
 
 def render_gem_my_list_markdown(
@@ -210,16 +242,16 @@ def render_gem_my_list_markdown(
     lines = [
         f"## {heading}",
         "",
-        "| Instrument | Checklist | MTF | SME (H1) | SVI | EDGE+ | Combo | Exec | Notes |",
-        "|------------|-----------|-----|----------|-----|-------|-------|------|-------|",
+        "| Instrument | Dir | Checklist | MTF | SME (H1) | SVI | EDGE+ | Combo | Exec | Signal | Notes |",
+        "|------------|-----|-----------|-----|----------|-----|-------|-------|------|--------|-------|",
     ]
     board = build_gem_my_list_rows(scans, trade_ready_only=trade_ready_only)
     if not board:
-        lines.append("| _none_ | — | — | — | — | — | — | WAIT | No rows |")
+        lines.append("| _none_ | — | — | — | — | — | — | — | WAIT | — | No rows |")
     else:
-        for inst, chk, mtf, sme, svi, eplus, combo, ex, notes in board:
+        for inst, dir_c, chk, mtf, sme, svi, eplus, combo, ex, sig, notes in board:
             lines.append(
-                f"| **{inst}** | {chk} | {mtf} | {sme} | {svi} | **{eplus}** | {combo} | {ex} | {notes} |"
+                f"| **{inst}** | {dir_c} | {chk} | {mtf} | {sme} | {svi} | {eplus} | {combo} | {ex} | {sig} | {notes} |"
             )
     lines.append("")
     return lines
@@ -246,8 +278,8 @@ def render_reflection_table_markdown(scans: List[InstrumentMTFScan]) -> List[str
         sfm = sme.sfm_label if sme and sme.sfm_active else "—"
         rqs = f"{sme.rqs_last:+d}" if sme and sme.rqs_last is not None else "—"
         lines.append(
-            f"| **{s.display_name}** | {r.signal_name} | {sme.spc if sme else 0} | {sse} | {sfm} | {rqs} | "
-            f"{sme.svi_weight if sme else 0:+d} | **{sme.edge_plus if sme else 0}** | {sme.src_summary if sme else '—'} |"
+            f"| **{s.display_name}** | {signal_chip(r.signal_name)} | {sme.spc if sme else 0} | {sse} | {sfm} | {rqs} | "
+            f"{sme.svi_weight if sme else 0:+d} | {edge_plus_chip(sme.edge_plus if sme else 0)} | {sme.src_summary if sme else '—'} |"
         )
     lines.append("")
     return lines
@@ -284,6 +316,70 @@ def build_timeframe_table_rows(
     return rows
 
 
+DASHBOARD_COLS = ("R1", "R2", "R3", "D1", "D2", "D3", "MF", "MV", "CDL", "GM", "Score")
+
+
+def _dashboard_row_cells(d: TFDashboardState) -> str:
+    return " · ".join(d.row_cells())
+
+
+def render_terminal_matrix_markdown(scans: List[InstrumentMTFScan]) -> List[str]:
+    """GEM Logic 1.5 terminal dashboard — one table per instrument (rows = TF)."""
+    lines = [
+        "## GEM Terminal Matrix (Logic 1.5)",
+        "",
+        "_Columns match TradingView dashboard. Cells use 🟢 Emerald / 🔴 Ruby / ⚪ neutral + hex codes._",
+        "",
+    ]
+    for scan in scans:
+        if not scan.dashboards:
+            continue
+        cr = scan.combined_rating
+        head = scan.display_name
+        if cr:
+            head = f"{head} — {direction_chip(cr.direction)}"
+        lines.append(f"### {head}")
+        lines.append("")
+        header = "| TF | " + " | ".join(DASHBOARD_COLS) + " |"
+        sep = "|----|" + "|".join(["---"] * len(DASHBOARD_COLS)) + "|"
+        lines.append(header)
+        lines.append(sep)
+        for tf in DEFAULT_TIMEFRAMES:
+            d = scan.dashboards.get(tf)
+            if not d:
+                lines.append(f"| {TF_SHORT.get(tf, tf)} | " + " | ".join(["—"] * len(DASHBOARD_COLS)) + " |")
+                continue
+            cells = coloured_dashboard_row(d)
+            lines.append(f"| {TF_SHORT.get(tf, tf)} | " + " | ".join(cells) + " |")
+        lines.append("")
+    return lines
+
+
+def terminal_matrix_payload(scans: List[InstrumentMTFScan]) -> Dict[str, dict]:
+    out: Dict[str, dict] = {}
+    for scan in scans:
+        rows = {}
+        for tf, d in scan.dashboards.items():
+            rows[tf] = {
+                "r1": d.r1,
+                "r2": d.r2,
+                "r3": d.r3,
+                "d1": d.d1,
+                "d2": d.d2,
+                "d3": d.d3,
+                "mf": d.mf,
+                "mv": d.mv,
+                "cdl": d.cdl,
+                "gm": d.gm,
+                "bias": d.bias,
+                "score": d.score,
+                "cells": d.row_cells(),
+            }
+        if rows:
+            out[scan.symbol] = rows
+    return out
+
+
 def render_timeframe_tables_markdown(scans: List[InstrumentMTFScan]) -> List[str]:
     lines = [
         "## Scores by timeframe",
@@ -300,13 +396,16 @@ def render_timeframe_tables_markdown(scans: List[InstrumentMTFScan]) -> List[str
         for row in build_timeframe_table_rows(scans, tf):
             inst, score, strength, direction, rsi, mfi, combo, eplus, signal, notes = row
             score_s = f"{score:+d}" if score else "0"
-            str_cell = f"{strength_badge(strength)} {strength}"
-            if direction in ("BULLISH", "BEARISH"):
-                str_cell += f" {direction.lower()}"
+            if direction == "BULLISH":
+                score_s = f"{CHIP_BULL} {score_s}"
+            elif direction == "BEARISH":
+                score_s = f"{CHIP_BEAR} {score_s}"
+            str_cell = mtf_strength_chip(strength, direction, strength_badge(strength))
             rsi_s = f"{rsi:.1f}" if rsi else "—"
             mfi_s = f"{mfi:.0f}" if mfi else "—"
             lines.append(
-                f"| **{inst}** | {score_s} | {str_cell} | {signal} | {rsi_s} | {mfi_s} | {combo}/4 | **{eplus}** | {notes} |"
+                f"| **{inst}** | {score_s} | {str_cell} | {signal_chip(signal)} | {rsi_s} | {mfi_s} | "
+                f"{combo}/4 | {edge_plus_chip(eplus)} | {notes} |"
             )
         lines.append("")
     return lines
@@ -331,3 +430,96 @@ def timeframe_tables_payload(scans: List[InstrumentMTFScan]) -> Dict[str, list]:
             for r in build_timeframe_table_rows(scans, tf)
         ]
     return out
+
+
+def render_mtf_summary_table_markdown(scans: List[InstrumentMTFScan]) -> List[str]:
+    """Compact instrument × timeframe score board (Technical Brief Task 2A)."""
+    tf_headers = [TF_SHORT.get(tf, tf) for tf in DEFAULT_TIMEFRAMES]
+    lines = [
+        "## MTF score summary",
+        "",
+        "_Per TF: score, direction (▲/▼), GEM tag when universal GEM fired on last bar._",
+        "",
+        "| Instrument | " + " | ".join(tf_headers) + " |",
+        "|------------|" + "|".join(["---"] * len(tf_headers)) + "|",
+    ]
+    for scan in scans:
+        cells = []
+        for tf in DEFAULT_TIMEFRAMES:
+            d = scan.dashboards.get(tf)
+            if not d:
+                cells.append("—")
+                continue
+            gem_active = d.gm != 0
+            cells.append(mtf_summary_cell(d.score, d.bias, gem_active))
+        lines.append(f"| **{scan.display_name}** | " + " | ".join(cells) + " |")
+    lines.append("")
+    return lines
+
+
+def render_backtest_table_markdown(results: List[BacktestResult]) -> List[str]:
+    """Auto backtest report table (Technical Brief Task 2B)."""
+    lines = [
+        "## GEM backtest (H1 / H4)",
+        "",
+        "_Entry: GEM edge + score ≥ 7 · Exit: confluence lost or score < 5 · Stop: swing · Target: 2R · closed bars only._",
+        "",
+        "| Instrument | TF | Trades | Win % | Avg R:R | Best | Worst | Max DD |",
+        "|------------|-----|--------|-------|---------|------|-------|--------|",
+    ]
+    for row in backtest_rows(results):
+        inst, tf, trades, win, avg, best, worst, dd, note = row
+        if note:
+            lines.append(f"| **{inst}** | {tf} | — | — | — | — | — | — | _{note}_ |")
+        else:
+            lines.append(
+                f"| **{inst}** | {tf} | {trades} | {win} | {avg} | {best} | {worst} | {dd} |"
+            )
+    lines.append("")
+    return lines
+
+
+@dataclass
+class GEMMyListResult:
+    """Programmatic result of ``run_gem_my_list()``."""
+
+    scans: List[InstrumentMTFScan]
+    backtest_results: List[BacktestResult]
+    watchlist: dict
+
+
+def run_gem_my_list(
+    instruments: Optional[List[dict]] = None,
+    *,
+    watchlist: Optional[dict] = None,
+    bars: int = 120,
+    run_backtest: bool = True,
+    backtest_bars: int = 500,
+    gem_config: Optional[GEMConfig] = None,
+    bt_config: Optional[BacktestConfig] = None,
+) -> GEMMyListResult:
+    """
+    Scan a list of instruments across M15/H1/H4/D and optionally run H1/H4 backtests.
+
+    This is the formal Python API for **GEM my list** (Technical Brief Task 2).
+    """
+    wl = dict(watchlist or {})
+    if instruments is not None:
+        wl["instruments"] = instruments
+    wl.setdefault("bars", bars)
+    wl.setdefault("timeframes", DEFAULT_TIMEFRAMES)
+
+    platform = GEMPlatform(gem_config=gem_config)
+    scans = platform.scan_watchlist_mtf(wl)
+
+    bt_results: List[BacktestResult] = []
+    if run_backtest and wl.get("instruments"):
+        bt_results = run_backtest_batch(
+            wl["instruments"],
+            bars=backtest_bars,
+            gem_config=gem_config,
+            bt_config=bt_config,
+            market=platform.market,
+        )
+
+    return GEMMyListResult(scans=scans, backtest_results=bt_results, watchlist=wl)

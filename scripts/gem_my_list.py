@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run GEM My List — compact trade board for config/watchlist.json."""
+"""Run GEM My List — colour-coded trade board (see src/gem_colours.py)."""
 
 import sys
 from pathlib import Path
