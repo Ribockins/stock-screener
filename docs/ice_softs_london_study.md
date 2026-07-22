@@ -3,6 +3,9 @@
 Persistent summary of backtests on user-supplied **1-minute ICE** exports (Jan–Jul 2026).  
 Re-run: `python scripts/ice_softs_analyze.py --coffee PATH --cocoa PATH`
 
+**Presentation dashboard (цветные таблицы, индикаторы 🟢🔵🟡🔴):**  
+`python scripts/open_reversal_dashboard.py` → open `reports/open_reversal_dashboard.html` in a browser.
+
 ## Data files (user uploads)
 
 | Instrument | Contract | Typical first bar (winter / summer in file) |

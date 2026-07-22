@@ -145,4 +145,5 @@ User trades **KCU26** (09:15 London) and **CCU26** (09:45 London). They upload *
 
 - **Study summary (fixed conclusions):** `docs/ice_softs_london_study.md`
 - **Re-run stats:** `python scripts/ice_softs_analyze.py --coffee PATH --cocoa PATH`
+- **Open Reversal HTML dashboard:** `python scripts/open_reversal_dashboard.py` → `reports/open_reversal_dashboard.html`
 - Key results: **cocoa-only fade** after 10m impulse ≈ **51%** win; **coffee→cocoa same 5m direction** on 08:15/08:45 set ≈ **35%**; do **not** expect 70% full retrace (~20% ≥50% retrace). File times shift **−1h** after UK BST (~30 Mar) if export is UTC.
