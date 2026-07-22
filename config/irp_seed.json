@@ -1,0 +1,17 @@
+{
+  "_note": "Weak priors until ledger stats replace them. SVI weight added to EDGE+ display.",
+  "by_instrument": {
+    "WTI": {"svi": 8, "depth": "high", "sse": "strong"},
+    "NG": {"svi": 10, "depth": "high", "sse": "very_strong"},
+    "Brent": {"svi": 7, "depth": "high", "sse": "strong"},
+    "USDCAD": {"svi": 2, "depth": "low", "sse": "medium"},
+    "US500": {"svi": -5, "depth": "low", "sse": "weak"},
+    "US30": {"svi": -4, "depth": "low", "sse": "weak"},
+    "UK100": {"svi": 0, "depth": "medium", "sse": "medium"},
+    "CAC40": {"svi": 0, "depth": "medium", "sse": "medium"},
+    "EURUSD": {"svi": 0, "depth": "medium", "sse": "medium"},
+    "EURGBP": {"svi": 1, "depth": "medium", "sse": "medium"},
+    "USDJPY": {"svi": 1, "depth": "medium", "sse": "medium"},
+    "Cocoa": {"svi": 3, "depth": "medium", "sse": "medium"}
+  }
+}
