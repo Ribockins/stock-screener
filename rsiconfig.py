@@ -42,3 +42,11 @@ DASHBOARD_HOST = os.getenv("DASHBOARD_HOST", "localhost")
 # Logging
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 LOG_FILE = os.getenv("LOG_FILE", "screener.log")
+
+# GEM Logic Platform
+WATCHLIST_PATH = os.getenv("WATCHLIST_PATH", "config/watchlist.json")
+GEM_RSI_OVERSOLD = int(os.getenv("GEM_RSI_OVERSOLD", "28"))
+GEM_RSI_OVERBOUGHT = int(os.getenv("GEM_RSI_OVERBOUGHT", "72"))
+GEM_LOOKBACK_BARS = int(os.getenv("GEM_LOOKBACK_BARS", "84"))
+GEM_DIV_COUNT = int(os.getenv("GEM_DIV_COUNT", "3"))
+GEM_CONFIRM_WINDOW = int(os.getenv("GEM_CONFIRM_WINDOW", "8"))
