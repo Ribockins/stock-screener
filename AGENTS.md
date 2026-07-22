@@ -138,3 +138,11 @@ PYTHONPATH=/workspace python scripts/gem_scan_pipeline.py
 Does in one pass: **live MTF scan** → `data/signal_journal.csv` → `data/signal_ledger.csv` → `reports/latest_gem_report.md`.
 
 CSV data stays on the machine (see `data/.gitignore`); code/config is on GitHub.
+
+### ICE Coffee / Cocoa (London open) — user softs research
+
+User trades **KCU26** (09:15 London) and **CCU26** (09:45 London). They upload **1m ICE TXT** exports (not in git by default).
+
+- **Study summary (fixed conclusions):** `docs/ice_softs_london_study.md`
+- **Re-run stats:** `python scripts/ice_softs_analyze.py --coffee PATH --cocoa PATH`
+- Key results: **cocoa-only fade** after 10m impulse ≈ **51%** win; **coffee→cocoa same 5m direction** on 08:15/08:45 set ≈ **35%**; do **not** expect 70% full retrace (~20% ≥50% retrace). File times shift **−1h** after UK BST (~30 Mar) if export is UTC.
