@@ -113,6 +113,8 @@ def plot_spread_chart(
 
 def main() -> int:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--leg-a", dest="leg_a", default=None, help="Alias for first leg (with --leg-b)")
+    parser.add_argument("--leg-b", dest="leg_b", default=None)
     parser.add_argument("--uk", default="RR.L")
     parser.add_argument("--cac", default="ACA.PA")
     parser.add_argument("--days", type=int, default=15)
@@ -125,6 +127,8 @@ def main() -> int:
     args = parser.parse_args()
 
     uk, cac = args.uk, args.cac
+    if args.leg_a and args.leg_b:
+        uk, cac = args.leg_a, args.leg_b
     daily = fetch_ohlc([uk, cac], period="2y", interval="1d")
     if uk not in daily or cac not in daily:
         print("Missing daily data for calibration")
