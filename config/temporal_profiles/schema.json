@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TemporalProfile",
+  "type": "object",
+  "required": ["symbol", "timezone", "windows"],
+  "properties": {
+    "symbol": { "type": "string" },
+    "timezone": { "type": "string", "description": "IANA e.g. America/New_York" },
+    "bar_minutes": { "type": "integer" },
+    "data_notes": { "type": "string" },
+    "windows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "start_et", "entry_et", "side", "tp_points", "sl_points"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "start_et": { "type": "string", "description": "HH:MM anchor" },
+          "entry_et": { "type": "string" },
+          "exit_et": { "type": "string" },
+          "side": { "enum": ["fade", "follow", "either"] },
+          "min_impulse_points": { "type": "number" },
+          "tp_points": { "type": "number" },
+          "tp_mode": { "enum": ["fixed", "pct_impulse", "min_of_both"] },
+          "tp_pct_impulse": { "type": "number" },
+          "sl_points": { "type": "number" },
+          "sl_mode": { "enum": ["beyond_extreme", "fixed"] },
+          "weekdays": {
+            "type": "array",
+            "items": { "enum": ["Mon", "Tue", "Wed", "Thu", "Fri"] }
+          },
+          "confidence": { "enum": ["high", "medium", "low", "research"] },
+          "stats": { "type": "object" }
+        }
+      }
+    },
+    "peak_hours_et": { "type": "array", "items": { "type": "string" } },
+    "avoid": { "type": "array", "items": { "type": "string" } }
+  }
+}

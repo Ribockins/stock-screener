@@ -1,0 +1,23 @@
+{
+  "description": "Finviz custom screen — paste tickers from screener export (rel vol >0.25, avg vol 500–10k)",
+  "source": "finviz_screen",
+  "filters": "sh_avgvol:500to10000 sh_relvol:o0.25",
+  "timeframe": "60",
+  "timeframes": ["15", "60", "240", "1d"],
+  "bars": 120,
+  "instruments": [
+    {"symbol": "BITO", "exchange": "NYSEARCA", "name": "ProShares Bitcoin ETF"},
+    {"symbol": "ARMG", "exchange": "NYSEARCA", "name": "Leverage 2X Long ARM ETF"},
+    {"symbol": "ASML", "exchange": "NASDAQ", "name": "ASML"},
+    {"symbol": "AXTX", "exchange": "NYSEARCA", "name": "Tradr 2X Long AXTI ETF"},
+    {"symbol": "BABX", "exchange": "NYSEARCA", "name": "GraniteShares 2X Long BABA ETF"},
+    {"symbol": "BEX", "exchange": "NYSEARCA", "name": "Tradr 2X Long BE ETF"},
+    {"symbol": "BITU", "exchange": "NYSEARCA", "name": "ProShares Ultra Bitcoin ETF"},
+    {"symbol": "BITX", "exchange": "NYSEARCA", "name": "2x Bitcoin ETF"},
+    {"symbol": "BJDX", "exchange": "NASDAQ", "name": "Bluejay Diagnostics"},
+    {"symbol": "BMNZ", "exchange": "NYSEARCA", "name": "2X Short BMNR ETF"},
+    {"symbol": "BYAH", "exchange": "NASDAQ", "name": "Park Ha Biological"},
+    {"symbol": "CCUP", "exchange": "NYSEARCA", "name": "T-REX 2X Long CRCL ETF"},
+    {"symbol": "CGBL", "exchange": "NYSEARCA", "name": "Capital Group Core Balanced ETF"}
+  ]
+}

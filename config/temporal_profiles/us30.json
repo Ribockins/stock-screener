@@ -1,0 +1,44 @@
+{
+  "symbol": "US30",
+  "timezone": "America/New_York",
+  "bar_minutes": 1,
+  "data_notes": "From 1m sample ~27d Jun–Jul 2026",
+  "peak_hours_et": ["14:30", "15:00", "15:30", "16:00"],
+  "avoid": ["09:30 trend continuation fade", "16:00 late fade"],
+  "windows": [
+    {
+      "id": "us30_1430_fade",
+      "label": "Cash-hour peak fade",
+      "start_et": "14:30",
+      "entry_et": "14:40",
+      "exit_et": "15:30",
+      "side": "fade",
+      "min_impulse_points": 20,
+      "tp_points": 30,
+      "tp_mode": "pct_impulse",
+      "tp_pct_impulse": 0.5,
+      "sl_points": 15,
+      "sl_mode": "beyond_extreme",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      "confidence": "medium",
+      "stats": { "median_retrace_30m_pct": 0.45, "ge50_30m": 0.47 }
+    },
+    {
+      "id": "us30_1230_retrace",
+      "label": "Midday retrace zone",
+      "start_et": "12:00",
+      "entry_et": "12:20",
+      "exit_et": "13:30",
+      "side": "fade",
+      "min_impulse_points": 20,
+      "tp_points": 25,
+      "tp_mode": "pct_impulse",
+      "tp_pct_impulse": 0.5,
+      "sl_points": 20,
+      "sl_mode": "beyond_extreme",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      "confidence": "medium",
+      "stats": { "ge50_30m": 0.55 }
+    }
+  ]
+}

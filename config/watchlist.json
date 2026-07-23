@@ -1,0 +1,20 @@
+{
+  "refresh_minutes": 5,
+  "timeframe": "60",
+  "timeframes": ["15", "60", "240", "1d"],
+  "bars": 120,
+  "instruments": [
+    {"symbol": "NG=F", "exchange": "COMEX", "name": "NG"},
+    {"symbol": "CL=F", "exchange": "NYMEX", "name": "WTI"},
+    {"symbol": "BZ=F", "exchange": "ICE", "name": "Brent"},
+    {"symbol": "CC=F", "exchange": "ICE", "name": "Cocoa"},
+    {"symbol": "^DJI", "exchange": "INDEX", "name": "US30"},
+    {"symbol": "^GSPC", "exchange": "INDEX", "name": "US500"},
+    {"symbol": "^FTSE", "exchange": "INDEX", "name": "UK100"},
+    {"symbol": "^FCHI", "exchange": "INDEX", "name": "CAC40"},
+    {"symbol": "EURUSD=X", "exchange": "FOREX", "name": "EURUSD"},
+    {"symbol": "EURGBP=X", "exchange": "FOREX", "name": "EURGBP"},
+    {"symbol": "USDCAD=X", "exchange": "FOREX", "name": "USDCAD"},
+    {"symbol": "USDJPY=X", "exchange": "FOREX", "name": "USDJPY"}
+  ]
+}
