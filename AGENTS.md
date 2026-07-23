@@ -150,6 +150,7 @@ User trades **KCU26** (09:15 London) and **CCU26** (09:45 London). They upload *
 ### Platform command center (TEMPORAL + GEM/EDGE)
 
 - **One-page rules:** `docs/platform_master_playbook.md`
-- **Time windows (JSON):** `config/temporal_profiles/` (NGAS, US30, SPX500 seeded)
-- **Morning table:** `python scripts/morning_command_center.py` → `reports/morning_command_center.md`
+- **Time windows (JSON):** `config/temporal_profiles/` (NGAS, US30, SPX500, NAS100, GER30, EUSTX50, ESP35)
+- **Cross-market batch:** `python scripts/cross_market_profile_batch.py` → `reports/cross_market_sequence_report.md` (Sierra files under Cursor uploads path)
+- **Morning table:** `python scripts/morning_command_center.py` → `reports/morning_command_center.md` (use `--tz Europe/Berlin` for EU profiles)
 - Key results: **cocoa-only fade** after 10m impulse ≈ **51%** win; **coffee→cocoa same 5m direction** on 08:15/08:45 set ≈ **35%**; do **not** expect 70% full retrace (~20% ≥50% retrace). File times shift **−1h** after UK BST (~30 Mar) if export is UTC.

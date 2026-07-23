@@ -65,13 +65,21 @@ def svi(symbol: str) -> int:
     return int(by.get(key, {}).get("svi", 0))
 
 
+def window_times(w: dict) -> tuple[str, str, str]:
+    start = w.get("start_et") or w.get("start_local", "00:00")
+    entry = w.get("entry_et") or w.get("entry_local", start)
+    exit_ = w.get("exit_et") or w.get("exit_local", "23:59")
+    return start, entry, exit_
+
+
 def gem_slot(symbol: str) -> str:
     """Placeholder until live scan wired; document required checks."""
     return "RSI+Div+Candle · Score · Exec WAIT/WARN/OK"
 
 
 def vector_slot(symbol: str, window: dict) -> str:
-    return f"HOLD until {window.get('exit_et', '?')} · FAST exit on SL"
+    _, _, exit_ = window_times(window)
+    return f"HOLD until {exit_} · FAST exit on SL"
 
 
 def main() -> int:
@@ -101,9 +109,7 @@ def main() -> int:
             days = w.get("weekdays") or ["Mon", "Tue", "Wed", "Thu", "Fri"]
             if wday not in days:
                 continue
-            start = w.get("start_et", "00:00")
-            entry = w.get("entry_et", start)
-            exit_ = w.get("exit_et", "23:59")
+            start, entry, exit_ = window_times(w)
             # Active from start through exit
             if not in_window(now, start, exit_):
                 continue
@@ -135,8 +141,9 @@ def main() -> int:
             days = ",".join(w.get("weekdays", []))
             if wday not in (w.get("weekdays") or []):
                 continue
+            start, entry, exit_ = window_times(w)
             lines.append(
-                f"| {sym} | {w.get('id')} | {w.get('start_et')} | {w.get('entry_et')} | {w.get('exit_et')} | {days} | {w.get('label', '')} |"
+                f"| {sym} | {w.get('id')} | {start} | {entry} | {exit_} | {days} | {w.get('label', '')} |"
             )
 
     lines.extend(

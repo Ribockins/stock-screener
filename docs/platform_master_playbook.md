@@ -43,11 +43,21 @@ For each symbol on your chart list:
 3. Review JSON → merge into `config/temporal_profiles/`
 4. Re-run morning command center
 
-**Priority batch:** NGAS ✓ · US30 ✓ · SPX500 ✓ · WTI · Brent · Cocoa · UK100 · GER30 · VOLX · XAUUSD
+**Priority batch:** NGAS ✓ · US30 ✓ · SPX500 ✓ · NAS100 ✓ · GER30 ✓ · EUSTX50 ✓ · ESP35 ✓ · WTI · Brent · UK100 · VOLX · XAUUSD
+
+## Cross-market batch
+
+```bash
+python scripts/cross_market_profile_batch.py
+```
+
+→ `reports/cross_market_sequence_report.md` + `cross_market_profiles.json` (anchors, weekday range, lead–lag on 15m returns).
+
+Re-upload **1m** for NAS100/GER30 and align **date range** across EU+US before trusting VOLX→index chains.
 
 ## Lead–lag (next research)
 
-Cross-symbol script on aligned 5m: VOLX shock → index lag minutes → commodity follow.
+Same-calendar 1m/5m: VOLX shock → index lag minutes → oil/gold follow. NGAS↔US30 in current sample: US30 leads ~45m (weak corr).
 
 ## One screen (target UI)
 
