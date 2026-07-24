@@ -1,0 +1,44 @@
+{
+  "symbol": "UKOil",
+  "timezone": "America/New_York",
+  "bar_minutes": 1,
+  "data_notes": "Brent 1m Jun–Jul 2026 (~22d). Best fade 16:00 ET; 14:30 weak vs US index cluster. Daily inverse US30 (−0.27 252d). Pair with NGAS (15m corr ~0.24).",
+  "peak_hours_et": ["14:00", "15:00", "16:00", "09:00"],
+  "avoid": ["14:30 blind fade (median retrace 37%)", "Treat as energy leg not US equity sync"],
+  "windows": [
+    {
+      "id": "ukoil_1600_fade",
+      "label": "Late cash Brent fade",
+      "start_et": "16:00",
+      "entry_et": "16:10",
+      "exit_et": "17:00",
+      "side": "fade",
+      "min_impulse_points": 0.15,
+      "tp_points": 0.20,
+      "tp_mode": "pct_impulse",
+      "tp_pct_impulse": 0.5,
+      "sl_points": 0.10,
+      "sl_mode": "beyond_extreme",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      "confidence": "medium",
+      "stats": { "median_retrace_30m_pct": 52.5, "ge50_pct": 52, "n": 21 }
+    },
+    {
+      "id": "ukoil_1430_energy",
+      "label": "NY peak — NGAS/energy confirm only",
+      "start_et": "14:30",
+      "entry_et": "14:40",
+      "exit_et": "15:30",
+      "side": "fade",
+      "min_impulse_points": 0.20,
+      "tp_points": 0.25,
+      "tp_mode": "pct_impulse",
+      "tp_pct_impulse": 0.5,
+      "sl_points": 0.12,
+      "sl_mode": "beyond_extreme",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      "confidence": "research",
+      "stats": { "median_retrace_30m_pct": 36.7, "ge50_pct": 48, "n": 21, "note": "Require NGAS TEMPORAL or GEM energy confirm" }
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "description": "Brian Shannon MTF roles for EDGE (M15 / H1 / H4 / D1)",
+  "timeframes": {
+    "15": {
+      "label": "M15",
+      "role": "tactical_warning",
+      "purpose": "early detection, entry timing",
+      "weight_in_alignment": 1,
+      "note": "noisy; use with propagation score"
+    },
+    "60": {
+      "label": "H1",
+      "role": "primary_operational",
+      "purpose": "main signal layer for GEM checklist",
+      "weight_in_alignment": 3,
+      "note": "default primary_analysis in gem_platform"
+    },
+    "240": {
+      "label": "H4",
+      "role": "context_strength",
+      "purpose": "swing structure confirmation",
+      "weight_in_alignment": 2
+    },
+    "1d": {
+      "label": "D1",
+      "role": "strategic_regime",
+      "purpose": "background trend / regime change",
+      "weight_in_alignment": 2
+    }
+  },
+  "reading_rules": [
+    "Score 4 on one TF = candidate only",
+    "H1 + H4 aligned = strong warning",
+    "D + H4 + H1 aligned = possible regime shift",
+    "M15 opposite to H4/D = likely pullback not reversal"
+  ]
+}

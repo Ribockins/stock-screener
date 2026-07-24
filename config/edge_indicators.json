@@ -1,0 +1,19 @@
+{
+  "primary_combo": "RSI_MFI",
+  "top3_combos": ["RSI_MFI", "RSI_EMA", "BB_RSI"],
+  "top10_ranked": [
+    "RSI_MFI",
+    "RSI_EMA",
+    "BB_RSI",
+    "VWAP_RSI",
+    "MACD_MFI",
+    "ADX_RSI",
+    "SQUEEZE_BB_KC",
+    "VP_RSI",
+    "CVD_RSI",
+    "SUPERTREND_MFI"
+  ],
+  "mfi_period": 14,
+  "dual_div_boost": "raise_tier_or_dual_tag",
+  "notes": "GEM 1.5 = RSI core; EDGE 2.0 adds MFI confirmation per docs/edge-indicator-combos.md"
+}

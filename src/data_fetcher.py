@@ -120,9 +120,13 @@ class TradingViewFetcher:
             )
             
             if data is not None and not data.empty:
-                # yfinance returns with columns: Open, High, Low, Close, Volume
-                # Rename to lowercase for consistency
-                data.columns = [col.lower() for col in data.columns]
+                # Flatten MultiIndex columns (yfinance >= 0.2 with single ticker)
+                if isinstance(data.columns, pd.MultiIndex):
+                    data.columns = data.columns.get_level_values(0)
+                # yfinance returns Open, High, Low, Close, Volume (+ optional extras)
+                data = data.rename(columns=str.lower)
+                ohlcv = ['open', 'high', 'low', 'close', 'volume']
+                data = data[[c for c in ohlcv if c in data.columns]]
                 
                 # Get the most recent 'bars' number of candles
                 data = data.tail(bars)
