@@ -12,9 +12,10 @@ _Sierra uploads · peak hours local TZ · 30m fade retrace @ anchors_
 | **UK100** | 1m | 21 | Jun–Jul 2026 | 14:00, 15:00, 16:00 |
 | **US30 / SPX500** | 1m | 27 | Jun–Jul 2026 | 14:00–16:00 |
 | **NGAS** | 5m | 27 | Jun–Jul 2026 | 14:00, 13:00 |
+| **XAUUSD** | 1m | 27 | Jun–Jul 2026 | 14:00, 15:00, 02:00 |
 | **GER30 / EUSTX50 / ESP35** | H1/1m | 22 | Jan–Feb 2026 | EU afternoon |
 
-**Still missing:** VOLX 1m, USOil/XAU 1m, CORNF/DJFXJPY re-upload.
+**Still missing:** VOLX 1m, USOil 1m, CORNF/DJFXJPY re-upload.
 
 **Daily macro:** `docs/cross_market_daily_report.md` · `config/macro_bias.json`
 

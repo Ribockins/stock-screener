@@ -23,6 +23,7 @@ FILES = [
     ("US30", "1min_US30.scid_BarData_0913.txt", "America/New_York"),
     ("SPX500", "1min_SPX500.scid_BarData_782c.txt", "America/New_York"),
     ("NGAS", "5_min_NGAS.scid_BarData_2f4a.txt", "America/New_York"),
+    ("XAUUSD", "XAUUSD.scid_BarData_33e8.txt", "America/New_York"),
 ]
 
 
@@ -101,7 +102,9 @@ def anchor_stats(df: pd.DataFrame, ah: int, am: int, lab: str, bm: int) -> dict 
         if diff.loc[i] > pd.Timedelta(minutes=max(bm, 5)):
             continue
         ix = int(i)
-        if ix + imp_bars + 6 >= len(df):
+        imp_bars = max(1, 10 // bm)
+        hold = max(1, 30 // bm)
+        if ix + imp_bars + hold >= len(df):
             continue
         p0 = df.iloc[ix]["open"]
         w = df.iloc[ix : ix + imp_bars + 1]
@@ -115,7 +118,6 @@ def anchor_stats(df: pd.DataFrame, ah: int, am: int, lab: str, bm: int) -> dict 
         sign = 1 if up >= dn else -1
         ex = hi if sign > 0 else lo
         imp = up if sign > 0 else dn
-        hold = max(1, 30 // bm)
         px = df.iloc[ix + hold]["last"]
         retr = ((ex - px) if sign > 0 else (px - ex)) / imp * 100
         rows.append(retr)
@@ -181,6 +183,9 @@ def main() -> None:
         ("FRA40", "ESP35"),
         ("US30", "SPX500"),
         ("NGAS", "US30"),
+        ("XAUUSD", "US30"),
+        ("XAUUSD", "SPX500"),
+        ("US30", "XAUUSD"),
     ]
     lags = []
     for a, b in pairs:
@@ -209,7 +214,7 @@ def main() -> None:
         lines.append(
             f"| **{p['symbol']}** | {p['bar_minutes']}m | {p['days']} | {p['from'][:10]}…{p['to'][:10]} | {', '.join(p['peak_hours_local'][:4])} |"
         )
-    lines.append("\n**Missing/empty:** CORNF, DJFXJPY (upload failed). **VOLX**, USOil/XAU **1m** still needed.\n")
+    lines.append("\n**Missing/empty:** CORNF, DJFXJPY (upload failed). **VOLX**, USOil **1m** still needed.\n")
     lines.append("**Note:** NAS100 & GER30 older files are **~1h bars** — FRA40/UK100/US30/SPX500 are **1m**.\n")
     lines.append(
         "**Calendar:** FRA40/UK100/US30/SPX500/NGAS share **Jun–Jul 2026**; GER30/EUSTX50/ESP35 older export is **Jan–Feb 2026** — "
