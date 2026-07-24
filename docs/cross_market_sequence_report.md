@@ -42,6 +42,14 @@ _Sierra uploads · peak hours local TZ · 30m fade retrace @ anchors_
 | US30→SPX500 | sync | 0.72 | US cluster |
 | NGAS→US30 | US30 ~45m ahead | 0.03 | NGAS not a US leader |
 
+## US30 (1m, refreshed 2026-07-24)
+
+| Anchor | Med retrace | ≥50% | Note |
+|--------|-------------|------|------|
+| **14:30** | **64.6%** | 62% | NY cluster anchor |
+| 09:30 | 10.0% | 38% | Continuation — no fade |
+| 16:00 | 6.1% | 33% | Avoid fade |
+
 ## XAUUSD (gold 1m)
 
 | Anchor | Med retrace | ≥50% | Note |

@@ -20,7 +20,7 @@ FILES = [
     ("ESP35", "ESP35.scid_BarData_9374.txt", "Europe/Madrid"),
     ("FRA40", "FRA40.scid_BarData_3e55.txt", "Europe/Paris"),
     ("UK100", "UK100.scid_BarData_af3c.txt", "Europe/London"),
-    ("US30", "1min_US30.scid_BarData_0913.txt", "America/New_York"),
+    ("US30", "US30.scid_BarData_5fa3.txt", "America/New_York"),
     ("SPX500", "1min_SPX500.scid_BarData_782c.txt", "America/New_York"),
     ("NGAS", "5_min_NGAS.scid_BarData_2f4a.txt", "America/New_York"),
     ("XAUUSD", "XAUUSD.scid_BarData_33e8.txt", "America/New_York"),
