@@ -1,17 +1,17 @@
 {
   "symbol": "FRA40",
   "timezone": "Europe/Paris",
-  "bar_minutes": 1440,
-  "data_notes": "Daily macro 2014–2026; intraday fade use EU 15:30 cluster (see EUSTX50/ESP35 1m). Sync with UK100/GER30.",
-  "peak_hours_local": ["15:00", "14:00"],
-  "avoid": ["Monday slight negative bias on daily"],
+  "bar_minutes": 1,
+  "data_notes": "1m Sierra Jun–Jul 2026 (~21d). Strong fades 11:00 & 17:30 local; 15:30 weak in this sample.",
+  "peak_hours_local": ["15:00", "14:00", "16:00", "13:00"],
+  "avoid": ["15:30 fade without GEM (median retrace 32%)", "Monday daily bias slightly negative"],
   "windows": [
     {
-      "id": "fra40_1530_fade",
-      "label": "CAC afternoon fade (mirror EU basket)",
-      "start_local": "15:30",
-      "entry_local": "15:40",
-      "exit_local": "16:30",
+      "id": "fra40_1730_fade",
+      "label": "US cash overlap fade",
+      "start_local": "17:30",
+      "entry_local": "17:40",
+      "exit_local": "18:30",
       "side": "fade",
       "min_impulse_points": 12,
       "tp_points": 15,
@@ -20,8 +20,25 @@
       "sl_points": 8,
       "sl_mode": "beyond_extreme",
       "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
-      "confidence": "research",
-      "stats": { "note": "Pending 1m FRA40 export; EU 15:30 anchor from EUSTX50/ESP35 batch" }
+      "confidence": "medium",
+      "stats": { "median_retrace_30m_pct": 71.7, "ge50_pct": 57, "n": 21 }
+    },
+    {
+      "id": "fra40_1100_fade",
+      "label": "Late morning impulse fade",
+      "start_local": "11:00",
+      "entry_local": "11:10",
+      "exit_local": "12:00",
+      "side": "fade",
+      "min_impulse_points": 10,
+      "tp_points": 12,
+      "tp_mode": "pct_impulse",
+      "tp_pct_impulse": 0.5,
+      "sl_points": 8,
+      "sl_mode": "beyond_extreme",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      "confidence": "medium",
+      "stats": { "median_retrace_30m_pct": 66.7, "ge50_pct": 52, "n": 21 }
     }
   ]
 }

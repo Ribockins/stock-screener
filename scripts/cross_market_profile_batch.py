@@ -18,6 +18,8 @@ FILES = [
     ("GER30", "GER30.scid_BarData_bb8c.txt", "Europe/Berlin"),
     ("EUSTX50", "EUSTX50.scid_BarData_53c5.txt", "Europe/Berlin"),
     ("ESP35", "ESP35.scid_BarData_9374.txt", "Europe/Madrid"),
+    ("FRA40", "FRA40.scid_BarData_3e55.txt", "Europe/Paris"),
+    ("UK100", "UK100.scid_BarData_af3c.txt", "Europe/London"),
     ("US30", "1min_US30.scid_BarData_0913.txt", "America/New_York"),
     ("SPX500", "1min_SPX500.scid_BarData_782c.txt", "America/New_York"),
     ("NGAS", "5_min_NGAS.scid_BarData_2f4a.txt", "America/New_York"),
@@ -174,6 +176,9 @@ def main() -> None:
         ("GER30", "EUSTX50"),
         ("GER30", "ESP35"),
         ("EUSTX50", "ESP35"),
+        ("UK100", "FRA40"),
+        ("UK100", "US30"),
+        ("FRA40", "ESP35"),
         ("US30", "SPX500"),
         ("NGAS", "US30"),
     ]
@@ -204,11 +209,11 @@ def main() -> None:
         lines.append(
             f"| **{p['symbol']}** | {p['bar_minutes']}m | {p['days']} | {p['from'][:10]}…{p['to'][:10]} | {', '.join(p['peak_hours_local'][:4])} |"
         )
-    lines.append("\n**Missing/empty:** CORNF, DJFXJPY (upload failed). FRA40, VOLX, WTI, metals not in batch yet.\n")
-    lines.append("**Note:** NAS100 & GER30 files are **~1h bars**, not 1m — use US30/SPX500/EUSTX50/ESP35 1m for execution.\n")
+    lines.append("\n**Missing/empty:** CORNF, DJFXJPY (upload failed). **VOLX**, USOil/XAU **1m** still needed.\n")
+    lines.append("**Note:** NAS100 & GER30 older files are **~1h bars** — FRA40/UK100/US30/SPX500 are **1m**.\n")
     lines.append(
-        "**Calendar:** EU set (GER30/EUSTX50/ESP35) is **Jan–Feb 2026**; US set (NAS100/US30/SPX500/NGAS) is **Jun–Jul 2026** — "
-        "cross-region lead-lag pairs are not comparable until exports share the same dates.\n"
+        "**Calendar:** FRA40/UK100/US30/SPX500/NGAS share **Jun–Jul 2026**; GER30/EUSTX50/ESP35 older export is **Jan–Feb 2026** — "
+        "EU lead-lag across those sets is limited until dates align.\n"
     )
 
     lines.append("## Weekday avg daily range (points)\n")
@@ -247,9 +252,9 @@ def main() -> None:
             "",
             "## Sequence hypothesis (for GEM + VECTOR)",
             "",
-            "1. **Europe open (09:00 CET):** GER30 / EUSTX50 / ESP35 impulse → fade if retrace ≥50% at anchor.",
-            "2. **US open (09:30 ET):** NAS100 (H1) confirms → US30/SPX500 1m execution.",
-            "3. **US peak (14:30 ET):** NGAS + US indices — shared fade window (not 1:1 points).",
+            "1. **London 11:00:** UK100 fade; FRA40 often leads UK ~60m on 15m returns.",
+            "2. **Paris 17:30:** FRA40 fade (71% median retrace in Jun–Jul 2026 sample).",
+            "3. **US peak (14:30 ET):** NAS100 + US30/SPX500 + NGAS — shared fade window.",
             "4. **GEM CONFIRMED** only inside active TEMPORAL row (`morning_command_center.py`).",
             "5. **VECTOR** holds to profile `exit_et`; APEX pairs when z extreme **and** index leg agrees.",
             "",
