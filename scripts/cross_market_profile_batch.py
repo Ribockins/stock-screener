@@ -24,6 +24,7 @@ FILES = [
     ("SPX500", "1min_SPX500.scid_BarData_782c.txt", "America/New_York"),
     ("NGAS", "5_min_NGAS.scid_BarData_2f4a.txt", "America/New_York"),
     ("XAUUSD", "XAUUSD.scid_BarData_33e8.txt", "America/New_York"),
+    ("XAGUSD", "XAGUSD.scid_BarData_8a66.txt", "America/New_York"),
 ]
 
 
@@ -185,7 +186,8 @@ def main() -> None:
         ("NGAS", "US30"),
         ("XAUUSD", "US30"),
         ("XAUUSD", "SPX500"),
-        ("US30", "XAUUSD"),
+        ("XAGUSD", "XAUUSD"),
+        ("XAGUSD", "US30"),
     ]
     lags = []
     for a, b in pairs:
