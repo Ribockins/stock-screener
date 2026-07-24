@@ -150,7 +150,7 @@ User trades **KCU26** (09:15 London) and **CCU26** (09:45 London). They upload *
 ### Platform command center (TEMPORAL + GEM/EDGE)
 
 - **One-page rules:** `docs/platform_master_playbook.md`
-- **Time windows (JSON):** `config/temporal_profiles/` (… XAUUSD, XAGUSD, UKOil/Brent, USOil daily-only)
+- **Time windows (JSON):** `config/temporal_profiles/` (indices, NGAS, metals, **USOil/UKOil** 1m, …)
 - **Cross-market intraday:** `python scripts/cross_market_profile_batch.py` → `docs/cross_market_sequence_report.md`
 - **Daily macro:** `python scripts/cross_market_daily_batch.py` → `docs/cross_market_daily_report.md` · `config/macro_bias.json`
 - **Morning table:** `python scripts/morning_command_center.py` → `reports/morning_command_center.md` (use `--tz Europe/Berlin` for EU profiles)
