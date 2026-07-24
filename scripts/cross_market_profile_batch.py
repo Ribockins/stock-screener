@@ -25,6 +25,7 @@ FILES = [
     ("NGAS", "5_min_NGAS.scid_BarData_2f4a.txt", "America/New_York"),
     ("XAUUSD", "XAUUSD.scid_BarData_33e8.txt", "America/New_York"),
     ("XAGUSD", "XAGUSD.scid_BarData_8a66.txt", "America/New_York"),
+    ("UKOil", "UKOil.scid_BarData_f158.txt", "America/New_York"),
 ]
 
 
@@ -188,6 +189,9 @@ def main() -> None:
         ("XAUUSD", "SPX500"),
         ("XAGUSD", "XAUUSD"),
         ("XAGUSD", "US30"),
+        ("UKOil", "US30"),
+        ("UKOil", "NGAS"),
+        ("UKOil", "XAUUSD"),
     ]
     lags = []
     for a, b in pairs:
@@ -216,7 +220,7 @@ def main() -> None:
         lines.append(
             f"| **{p['symbol']}** | {p['bar_minutes']}m | {p['days']} | {p['from'][:10]}…{p['to'][:10]} | {', '.join(p['peak_hours_local'][:4])} |"
         )
-    lines.append("\n**Missing/empty:** CORNF, DJFXJPY (upload failed). **VOLX**, USOil **1m** still needed.\n")
+    lines.append("\n**Missing/empty:** CORNF, DJFXJPY (upload failed). **VOLX**, USOil (WTI) **1m** still needed.\n")
     lines.append("**Note:** NAS100 & GER30 older files are **~1h bars** — FRA40/UK100/US30/SPX500 are **1m**.\n")
     lines.append(
         "**Calendar:** FRA40/UK100/US30/SPX500/NGAS share **Jun–Jul 2026**; GER30/EUSTX50/ESP35 older export is **Jan–Feb 2026** — "
