@@ -1,9 +1,27 @@
 {
   "symbol": "XAUUSD",
   "timezone": "America/New_York",
-  "bar_minutes": 1440,
-  "data_notes": "Gold daily 2014–2026; +0.13% median next day after US30 ≤−1%. Recent +corr with US30 (0.32 252d).",
-  "peak_hours_et": ["14:30"],
-  "avoid": ["Treat as risk-on asset in 2025–26 sample, not pure safe-haven"],
-  "windows": []
+  "bar_minutes": 1,
+  "data_notes": "1m Sierra Jun–Jul 2026 (~27d). Sync with US30/SPX on 15m (corr ~0.37–0.40). Daily: +0.13% next day after US30 ≤−1%.",
+  "peak_hours_et": ["14:00", "15:00", "02:00", "16:00"],
+  "avoid": ["09:30 fade (weak retrace)", "16:00 continuation", "Pure safe-haven assumption — moves with US risk-on"],
+  "windows": [
+    {
+      "id": "xauusd_1430_fade",
+      "label": "NY cash peak fade",
+      "start_et": "14:30",
+      "entry_et": "14:40",
+      "exit_et": "15:30",
+      "side": "fade",
+      "min_impulse_points": 8,
+      "tp_points": 10,
+      "tp_mode": "pct_impulse",
+      "tp_pct_impulse": 0.5,
+      "sl_points": 5,
+      "sl_mode": "beyond_extreme",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      "confidence": "medium",
+      "stats": { "median_retrace_30m_pct": 62.6, "ge50_pct": 57, "n": 21 }
+    }
+  ]
 }

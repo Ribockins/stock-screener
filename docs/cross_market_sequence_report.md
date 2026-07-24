@@ -39,10 +39,20 @@ _Sierra uploads · peak hours local TZ · 30m fade retrace @ anchors_
 | US30→SPX500 | sync | 0.72 | US cluster |
 | NGAS→US30 | US30 ~45m ahead | 0.03 | NGAS not a US leader |
 
+## XAUUSD (gold 1m)
+
+| Anchor | Med retrace | ≥50% | Note |
+|--------|-------------|------|------|
+| **14:30** | **62.6%** | 57% | Trade with US30/SPX cluster |
+| 09:30 | 14.1% | 38% | Skip fade |
+| 16:00 | −19.7% | 38% | Continuation — avoid fade |
+
+**15m corr:** XAUUSD↔US30 **0.37**, XAUUSD↔SPX500 **0.40** — synchronous risk-on leg at NY peak.
+
 ## Sequence (GEM + VECTOR)
 
 1. **London 11:00** — UK100 fade; confirm with FRA40 (CAC often leads UK by ~1h on 15m).
 2. **Paris 17:30** — FRA40 fade (strongest CAC anchor in sample).
-3. **NY 14:30** — US30/SPX500/NGAS shared peak (1m/5m execution).
+3. **NY 14:30** — US30/SPX500/NGAS/**XAUUSD** shared peak (gold fades with indices in sample).
 4. **Macro filter** — yesterday US30 ≤−1% → gold/EU mild long bias (`macro_bias.json`).
 5. **GEM CONFIRMED** + **VECTOR** to profile `exit_et`.
