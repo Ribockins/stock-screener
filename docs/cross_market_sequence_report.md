@@ -16,7 +16,9 @@ _Sierra uploads · peak hours local TZ · 30m fade retrace @ anchors_
 | **SPX500** | 1m | 27 | 2026-06-23…2026-07-23 | 15:00, 14:00, 16:00, 20:00 |
 | **NGAS** | 5m | 27 | 2026-06-23…2026-07-23 | 14:00, 13:00, 15:00, 19:00 |
 
-**Missing/empty:** CORNF, DJFXJPY (upload failed). FRA40, VOLX, WTI, metals not in batch yet.
+**Missing/empty:** CORNF, DJFXJPY (upload failed). **VOLX** still needed for intraday chain.
+
+**Daily macro (2014–2026):** FRA40, UK100, US30, USOil, UKOil, XAUUSD, XAGUSD, NGAS — see `docs/cross_market_daily_report.md` + `config/macro_bias.json`.
 
 **Note:** NAS100 & GER30 files are **~1h bars**, not 1m — use US30/SPX500/EUSTX50/ESP35 1m for execution.
 

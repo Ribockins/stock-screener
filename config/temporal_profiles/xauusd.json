@@ -1,0 +1,9 @@
+{
+  "symbol": "XAUUSD",
+  "timezone": "America/New_York",
+  "bar_minutes": 1440,
+  "data_notes": "Gold daily 2014–2026; +0.13% median next day after US30 ≤−1%. Recent +corr with US30 (0.32 252d).",
+  "peak_hours_et": ["14:30"],
+  "avoid": ["Treat as risk-on asset in 2025–26 sample, not pure safe-haven"],
+  "windows": []
+}

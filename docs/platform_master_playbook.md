@@ -55,6 +55,14 @@ python scripts/cross_market_profile_batch.py
 
 Re-upload **1m** for NAS100/GER30 and align **date range** across EU+US before trusting VOLX→index chains.
 
+## Daily macro layer
+
+```bash
+python scripts/cross_market_daily_batch.py
+```
+
+→ `docs/cross_market_daily_report.md` · `config/macro_bias.json` (US30 shock → gold/EU/NGAS next-day priors).
+
 ## Lead–lag (next research)
 
 Same-calendar 1m/5m: VOLX shock → index lag minutes → oil/gold follow. NGAS↔US30 in current sample: US30 leads ~45m (weak corr).

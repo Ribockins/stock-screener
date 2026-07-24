@@ -1,0 +1,9 @@
+{
+  "symbol": "USOil",
+  "timezone": "America/New_York",
+  "bar_minutes": 1440,
+  "data_notes": "WTI daily 2014–2026; inverse corr US30 252d (−0.42). Intraday 1m/5m TBD.",
+  "peak_hours_et": ["14:30"],
+  "avoid": ["Chase after US30 shock without GEM"],
+  "windows": []
+}

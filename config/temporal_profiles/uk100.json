@@ -1,0 +1,9 @@
+{
+  "symbol": "UK100",
+  "timezone": "Europe/London",
+  "bar_minutes": 1440,
+  "data_notes": "Daily macro 2014–2026; APEX UK/CAC pair 1:1.26. Intraday TBD.",
+  "peak_hours_local": ["15:00", "14:00"],
+  "avoid": ["Thursday negative daily bias (−0.09% avg)"],
+  "windows": []
+}
