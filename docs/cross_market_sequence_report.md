@@ -58,7 +58,7 @@ _Sierra uploads · peak hours local TZ · 30m fade retrace @ anchors_
 | 14:30 | 42.1% | 48% | Only with XAUUSD/US30 GEM confirm |
 | 09:30 | 23.2% | 38% | Skip |
 
-**15m corr:** XAGUSD↔XAUUSD **0.77** — trade silver as **follow leg** to gold.
+**15m corr:** XAGUSD↔XAUUSD **0.86** — trade silver as **follow leg** to gold.
 
 ## Sequence (GEM + VECTOR)
 
