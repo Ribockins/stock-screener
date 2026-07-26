@@ -1,0 +1,66 @@
+{
+  "symbol": "NGAS",
+  "timezone": "America/New_York",
+  "bar_minutes": 5,
+  "data_notes": "Calibrated on ~27d 5m sample Jun–Jul 2026; refresh from scripts/build_temporal_profile.py",
+  "peak_hours_et": ["13:00", "14:00", "14:30", "15:00"],
+  "avoid": ["Fri 14:30 blind fade", "10:00 follow without GEM"],
+  "windows": [
+    {
+      "id": "ngas_1430_fade",
+      "label": "Peak fade after 10m impulse",
+      "start_et": "14:30",
+      "entry_et": "14:40",
+      "exit_et": "15:40",
+      "side": "fade",
+      "min_impulse_points": 0.006,
+      "tp_points": 0.008,
+      "tp_mode": "min_of_both",
+      "tp_pct_impulse": 0.5,
+      "sl_points": 0.002,
+      "sl_mode": "beyond_extreme",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu"],
+      "confidence": "medium",
+      "stats": {
+        "n_days": 22,
+        "median_impulse_10m": 0.015,
+        "tp_0.010_hit_rate": 0.59,
+        "tp_50pct_hit_rate": 0.64
+      }
+    },
+    {
+      "id": "ngas_1430_fade_thu",
+      "label": "Thursday smaller impulse — tight TP",
+      "start_et": "14:30",
+      "entry_et": "14:40",
+      "exit_et": "15:40",
+      "side": "fade",
+      "min_impulse_points": 0.005,
+      "tp_points": 0.006,
+      "tp_mode": "min_of_both",
+      "tp_pct_impulse": 0.5,
+      "sl_points": 0.002,
+      "sl_mode": "beyond_extreme",
+      "weekdays": ["Thu"],
+      "confidence": "research",
+      "stats": { "median_impulse_10m": 0.011, "note": "High SL rate in sample — GEM confirm required" }
+    },
+    {
+      "id": "ngas_midday_retrace",
+      "label": "Midday mean reversion band",
+      "start_et": "12:00",
+      "entry_et": "12:15",
+      "exit_et": "13:30",
+      "side": "fade",
+      "min_impulse_points": 0.006,
+      "tp_points": 0.010,
+      "tp_mode": "pct_impulse",
+      "tp_pct_impulse": 0.5,
+      "sl_points": 0.003,
+      "sl_mode": "beyond_extreme",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      "confidence": "medium",
+      "stats": { "ge50_at_30m_approx": 0.53 }
+    }
+  ]
+}

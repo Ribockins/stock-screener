@@ -1,0 +1,44 @@
+{
+  "symbol": "EUSTX50",
+  "timezone": "Europe/Berlin",
+  "bar_minutes": 1,
+  "data_notes": "1m Sierra Jan–Feb 2026",
+  "peak_hours_local": ["14:00", "15:00", "16:00", "17:00"],
+  "avoid": ["17:30 fade (weak retrace)"],
+  "windows": [
+    {
+      "id": "eustx50_1530_fade",
+      "label": "EU peak fade",
+      "start_local": "15:30",
+      "entry_local": "15:40",
+      "exit_local": "16:30",
+      "side": "fade",
+      "min_impulse_points": 4,
+      "tp_points": 5,
+      "tp_mode": "pct_impulse",
+      "tp_pct_impulse": 0.5,
+      "sl_points": 2,
+      "sl_mode": "beyond_extreme",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      "confidence": "medium",
+      "stats": { "median_retrace_30m_pct": 85.1, "ge50_pct": 55 }
+    },
+    {
+      "id": "eustx50_1100_fade",
+      "label": "Late morning impulse fade",
+      "start_local": "11:00",
+      "entry_local": "11:10",
+      "exit_local": "12:00",
+      "side": "fade",
+      "min_impulse_points": 3,
+      "tp_points": 4,
+      "tp_mode": "pct_impulse",
+      "tp_pct_impulse": 0.5,
+      "sl_points": 2,
+      "sl_mode": "beyond_extreme",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      "confidence": "research",
+      "stats": { "median_retrace_30m_pct": 41.7, "ge50_pct": 50 }
+    }
+  ]
+}

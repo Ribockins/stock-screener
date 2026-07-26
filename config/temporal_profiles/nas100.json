@@ -1,0 +1,44 @@
+{
+  "symbol": "NAS100",
+  "timezone": "America/New_York",
+  "bar_minutes": 60,
+  "data_notes": "H1 Sierra sample Jun–Jul 2026; fade stats from cross_market_profile_batch",
+  "peak_hours_et": ["14:00", "15:00", "16:00", "20:00"],
+  "avoid": ["16:00 fade (low retrace in sample)", "Use 1m US30/SPX for execution"],
+  "windows": [
+    {
+      "id": "nas100_1430_fade",
+      "label": "Cash peak fade (H1 context)",
+      "start_et": "14:30",
+      "entry_et": "14:45",
+      "exit_et": "15:30",
+      "side": "fade",
+      "min_impulse_points": 40,
+      "tp_points": 50,
+      "tp_mode": "pct_impulse",
+      "tp_pct_impulse": 0.5,
+      "sl_points": 25,
+      "sl_mode": "beyond_extreme",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      "confidence": "medium",
+      "stats": { "median_retrace_30m_pct": 73.7, "ge50_pct": 67 }
+    },
+    {
+      "id": "nas100_0930_fade",
+      "label": "US open fade",
+      "start_et": "09:30",
+      "entry_et": "09:45",
+      "exit_et": "10:30",
+      "side": "fade",
+      "min_impulse_points": 35,
+      "tp_points": 45,
+      "tp_mode": "pct_impulse",
+      "tp_pct_impulse": 0.5,
+      "sl_points": 25,
+      "sl_mode": "beyond_extreme",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      "confidence": "research",
+      "stats": { "median_retrace_30m_pct": 54.2, "ge50_pct": 68 }
+    }
+  ]
+}
