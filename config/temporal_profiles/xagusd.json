@@ -1,0 +1,44 @@
+{
+  "symbol": "XAGUSD",
+  "timezone": "America/New_York",
+  "bar_minutes": 1,
+  "data_notes": "1m Sierra Jun–Jul 2026 (~27d). Follows XAUUSD cluster; weaker 14:30 fade than gold. Daily macro: follow_gold on US30 shock.",
+  "peak_hours_et": ["15:00", "14:00", "02:00", "16:00"],
+  "avoid": ["09:30 fade", "14:30 blind fade without XAUUSD/US30 GEM confirm"],
+  "windows": [
+    {
+      "id": "xagusd_1600_fade",
+      "label": "Late cash fade",
+      "start_et": "16:00",
+      "entry_et": "16:10",
+      "exit_et": "17:00",
+      "side": "fade",
+      "min_impulse_points": 0.12,
+      "tp_points": 0.15,
+      "tp_mode": "pct_impulse",
+      "tp_pct_impulse": 0.5,
+      "sl_points": 0.08,
+      "sl_mode": "beyond_extreme",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      "confidence": "medium",
+      "stats": { "median_retrace_30m_pct": 51.7, "ge50_pct": 52, "n": 21 }
+    },
+    {
+      "id": "xagusd_1430_fade",
+      "label": "NY peak fade (with gold/US cluster)",
+      "start_et": "14:30",
+      "entry_et": "14:40",
+      "exit_et": "15:30",
+      "side": "fade",
+      "min_impulse_points": 0.15,
+      "tp_points": 0.18,
+      "tp_mode": "pct_impulse",
+      "tp_pct_impulse": 0.5,
+      "sl_points": 0.08,
+      "sl_mode": "beyond_extreme",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      "confidence": "research",
+      "stats": { "median_retrace_30m_pct": 42.1, "ge50_pct": 48, "n": 21, "note": "Require XAUUSD or US30 TEMPORAL active" }
+    }
+  ]
+}

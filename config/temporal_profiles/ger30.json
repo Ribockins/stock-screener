@@ -1,0 +1,44 @@
+{
+  "symbol": "GER30",
+  "timezone": "Europe/Berlin",
+  "bar_minutes": 60,
+  "data_notes": "H1 Sierra Jan–Feb 2026; pair with EUSTX50/ESP35 1m for execution",
+  "peak_hours_local": ["14:00", "15:00", "07:00", "08:00"],
+  "avoid": ["09:00 fade (ge50 low)", "Friday thin range"],
+  "windows": [
+    {
+      "id": "ger30_1730_fade",
+      "label": "US cash overlap fade",
+      "start_local": "17:30",
+      "entry_local": "17:45",
+      "exit_local": "18:30",
+      "side": "fade",
+      "min_impulse_points": 25,
+      "tp_points": 35,
+      "tp_mode": "pct_impulse",
+      "tp_pct_impulse": 0.5,
+      "sl_points": 20,
+      "sl_mode": "beyond_extreme",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu"],
+      "confidence": "medium",
+      "stats": { "median_retrace_30m_pct": 60.0, "ge50_pct": 62 }
+    },
+    {
+      "id": "ger30_1530_fade",
+      "label": "EU afternoon anchor",
+      "start_local": "15:30",
+      "entry_local": "15:40",
+      "exit_local": "16:30",
+      "side": "fade",
+      "min_impulse_points": 20,
+      "tp_points": 30,
+      "tp_mode": "pct_impulse",
+      "tp_pct_impulse": 0.5,
+      "sl_points": 18,
+      "sl_mode": "beyond_extreme",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      "confidence": "research",
+      "stats": { "median_retrace_30m_pct": 44.4, "ge50_pct": 33 }
+    }
+  ]
+}

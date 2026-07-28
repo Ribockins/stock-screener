@@ -1,0 +1,29 @@
+{
+  "description": "Finviz Top Gainers screen (page 1) — separate from main IG/CMC watchlist",
+  "source": "finviz_top_gainers",
+  "refresh_minutes": 0,
+  "timeframe": "60",
+  "bars": 120,
+  "instruments": [
+    {"symbol": "DXST", "name": "Finviz gainer #1"},
+    {"symbol": "LASE", "name": "Finviz gainer #2"},
+    {"symbol": "BJDX", "name": "Finviz gainer #3"},
+    {"symbol": "RKTO", "name": "Finviz gainer #4"},
+    {"symbol": "PMI", "name": "Finviz gainer #5"},
+    {"symbol": "LILKV", "name": "Finviz gainer #6"},
+    {"symbol": "DEVS", "name": "Finviz gainer #7"},
+    {"symbol": "VIDA", "name": "Finviz gainer #8"},
+    {"symbol": "VSXY", "name": "Finviz gainer #9"},
+    {"symbol": "LEGN", "name": "Finviz gainer #10"},
+    {"symbol": "TDTH", "name": "Finviz gainer #11"},
+    {"symbol": "SWMR", "name": "Finviz gainer #12"},
+    {"symbol": "FOFO", "name": "Finviz gainer #13"},
+    {"symbol": "PUSA", "name": "Finviz gainer #14"},
+    {"symbol": "GNTA", "name": "Finviz gainer #15"},
+    {"symbol": "ZJYL", "name": "Finviz gainer #16"},
+    {"symbol": "MRVL", "name": "Finviz gainer #17"},
+    {"symbol": "GPUS", "name": "Finviz gainer #18"},
+    {"symbol": "SOAR", "name": "Finviz gainer #19"},
+    {"symbol": "NTCL", "name": "Finviz gainer #20"}
+  ]
+}

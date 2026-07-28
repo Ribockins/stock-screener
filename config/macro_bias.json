@@ -1,0 +1,47 @@
+{
+  "updated": "2026-07-24",
+  "source": "scripts/cross_market_daily_batch.py · 3021 aligned days 2014–2026",
+  "rules": [
+    {
+      "id": "us30_down_gold_bid",
+      "when": "US30 daily close ≤ -1%",
+      "bias": { "XAUUSD": "mild_long_next_day", "XAGUSD": "follow_gold" },
+      "stats": { "XAUUSD_median_next_day_pct": 0.128, "XAUUSD_pos_pct": 56.4, "n": 312 }
+    },
+    {
+      "id": "us30_down_eu_bounce",
+      "when": "US30 daily close ≤ -1%",
+      "bias": { "UK100": "mild_long_next_day", "FRA40": "mild_long_next_day" },
+      "stats": { "UK100_median_next_day_pct": 0.106, "FRA40_median_next_day_pct": 0.207 }
+    },
+    {
+      "id": "us30_down_ngas_weak",
+      "when": "US30 daily close ≤ -1%",
+      "bias": { "NGAS": "caution_short_next_day" },
+      "stats": { "NGAS_median_next_day_pct": -0.456, "NGAS_pos_pct": 44.9 }
+    },
+    {
+      "id": "indices_sync",
+      "when": "any",
+      "bias": { "US30": "sync", "UK100": "sync", "FRA40": "sync" },
+      "stats": { "same_day_corr_252d": { "US30_UK100": 0.67, "US30_FRA40": 0.7, "UK100_FRA40": 0.75 } }
+    },
+    {
+      "id": "oil_inverse_equity_252d",
+      "when": "risk-off session",
+      "bias": { "USOil": "often_rises_when_US30_falls" },
+      "stats": { "corr_252d_US30_USOil": -0.42 }
+    },
+    {
+      "id": "gold_risk_on_252d",
+      "when": "US30 up trend",
+      "bias": { "XAUUSD": "positive_corr_with_equities_recent" },
+      "stats": { "corr_252d_US30_XAUUSD": 0.32 }
+    }
+  ],
+  "weekday_notes": {
+    "UK100": "Thursday slightly negative avg (−0.09%)",
+    "FRA40": "Wednesday strongest (+0.11%)",
+    "NGAS": "Thursday weakest (−0.22%)"
+  }
+}

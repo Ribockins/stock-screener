@@ -1,0 +1,44 @@
+{
+  "symbol": "USOil",
+  "timezone": "America/New_York",
+  "bar_minutes": 1,
+  "data_notes": "WTI 1m Jun–Jul 2026 (~27d). Sync with Brent (15m corr ~0.90). Best 16:00 fade; 14:30 weak. Daily inverse US30 (−0.42 252d).",
+  "peak_hours_et": ["14:00", "15:00", "16:00", "09:00"],
+  "avoid": ["14:30 blind fade (median 29%)", "Diverge from UKOil without spread thesis"],
+  "windows": [
+    {
+      "id": "usoil_1600_fade",
+      "label": "Late cash WTI fade",
+      "start_et": "16:00",
+      "entry_et": "16:10",
+      "exit_et": "17:00",
+      "side": "fade",
+      "min_impulse_points": 0.15,
+      "tp_points": 0.20,
+      "tp_mode": "pct_impulse",
+      "tp_pct_impulse": 0.5,
+      "sl_points": 0.10,
+      "sl_mode": "beyond_extreme",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      "confidence": "medium",
+      "stats": { "median_retrace_30m_pct": 56.2, "ge50_pct": 52, "n": 21 }
+    },
+    {
+      "id": "usoil_1430_energy",
+      "label": "NY peak — NGAS/Brent confirm only",
+      "start_et": "14:30",
+      "entry_et": "14:40",
+      "exit_et": "15:30",
+      "side": "fade",
+      "min_impulse_points": 0.20,
+      "tp_points": 0.25,
+      "tp_mode": "pct_impulse",
+      "tp_pct_impulse": 0.5,
+      "sl_points": 0.12,
+      "sl_mode": "beyond_extreme",
+      "weekdays": ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      "confidence": "research",
+      "stats": { "median_retrace_30m_pct": 28.5, "ge50_pct": 33, "n": 21, "note": "Require NGAS or UKOil GEM" }
+    }
+  ]
+}

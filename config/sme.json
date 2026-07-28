@@ -1,0 +1,21 @@
+{
+  "enabled": true,
+  "lookback_bars": 28,
+  "reaction_window": {
+    "15": 16,
+    "60": 12,
+    "240": 8,
+    "1d": 5
+  },
+  "zone_atr_mult": 0.8,
+  "weak_mfe_atr": 0.35,
+  "good_mfe_atr": 1.0,
+  "spc_scores": {"1": 1, "2": 3, "3": 2, "4": 0},
+  "sse_boost": {
+    "second_in_zone": 2,
+    "stronger_than_first": 3,
+    "with_dual_or_gem": 4
+  },
+  "max_sme_boost": 8,
+  "max_svi_weight": 10
+}

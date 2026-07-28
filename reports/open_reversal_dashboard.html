@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>OPEN REVERSAL ENGINE — Coffee &amp; Cocoa</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #121a24;
+      --border: #243044;
+      --text: #e8eef7;
+      --muted: #8fa3bf;
+      --green: #1f8f5f;
+      --green-bg: rgba(31, 143, 95, 0.18);
+      --blue: #2d7dd2;
+      --blue-bg: rgba(45, 125, 210, 0.16);
+      --yellow: #c9a227;
+      --yellow-bg: rgba(201, 162, 39, 0.15);
+      --red: #d64550;
+      --red-bg: rgba(214, 69, 80, 0.16);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 24px;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: radial-gradient(1200px 600px at 10% -10%, #1a2740 0%, var(--bg) 55%);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    h1 { font-size: 1.55rem; margin: 0 0 4px; letter-spacing: 0.02em; }
+    .sub { color: var(--muted); margin-bottom: 20px; font-size: 0.92rem; }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+    section h2 {
+      margin: 0 0 10px;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+    th { color: var(--muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    tr:last-child td { border-bottom: none; }
+    .metric { font-weight: 500; }
+    .value { font-variant-numeric: tabular-nums; font-weight: 700; }
+    .dots { white-space: nowrap; }
+    .label { color: var(--muted); font-size: 0.85rem; }
+    .note { display: block; font-size: 0.75rem; opacity: 0.85; }
+    .row-accent-green td { background: var(--green-bg); }
+    .row-accent-blue td { background: var(--blue-bg); }
+    .row-accent-yellow td { background: var(--yellow-bg); }
+    .row-accent-red td { background: var(--red-bg); }
+    .row-neutral td { background: rgba(255,255,255,0.03); }
+    .engine {
+      display: flex; flex-wrap: wrap; gap: 20px; align-items: center;
+      padding: 16px 18px; margin-bottom: 16px;
+      background: linear-gradient(90deg, #101820, #152433);
+      border: 1px solid var(--border); border-radius: 12px;
+    }
+    .engine .pill {
+      padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border);
+      min-width: 140px;
+    }
+    .engine .pill strong { display: block; font-size: 1.35rem; }
+    .engine .pill span { color: var(--muted); font-size: 0.8rem; }
+    .timeline {
+      font-family: ui-monospace, monospace; font-size: 0.72rem;
+      background: #0a1018; border-radius: 8px; padding: 12px; border: 1px solid var(--border);
+      white-space: pre; overflow-x: auto; color: #b8c9e0;
+    }
+    .heat-5 { background: rgba(31, 143, 95, 0.45); font-weight: 700; }
+    .heat-4 { background: rgba(31, 143, 95, 0.28); }
+    .heat-3 { background: rgba(45, 125, 210, 0.22); }
+    .heat-2 { background: rgba(201, 162, 39, 0.18); }
+    .heat-1 { background: rgba(214, 69, 80, 0.2); }
+    .wday { font-weight: 600; }
+    .n { color: var(--muted); }
+    footer { margin-top: 18px; color: var(--muted); font-size: 0.75rem; }
+  </style>
+</head>
+<body>
+  <h1>☕ COFFEE &amp; 🍫 COCOA — OPEN REVERSAL DASHBOARD</h1>
+  <p class="sub">ICE 1m · KCU26 / CCU26 · London open · сгенерировано 2026-07-22 17:27 UTC</p>
+
+  <div class="engine">
+    <div class="pill"><span>Coffee fade @09:45</span><strong>🟢 60.3%</strong></div>
+    <div class="pill"><span>Cocoa fade @09:45</span><strong>🟢 50.0%</strong></div>
+    <div class="pill"><span>Combined ≥50%</span><strong>🟢🟢 84.3%</strong></div>
+    <div class="pill"><span>Медиана старта разворота</span><strong>🔵 ~3 мин</strong></div>
+  </div>
+
+  <div class="grid">
+    <section class="full" style="grid-column: 1 / -1;">
+      <h2>📊 Сводка — 5 секунд</h2>
+      <table>
+        <thead><tr><th>Метрика</th><th>Результат</th><th>Индикатор</th><th>Оценка</th></tr></thead>
+        <tbody>
+          <tr class="row-neutral">
+      <td class="metric">Дней в анализе (открытие → полдень)</td>
+      <td class="value">125</td>
+      <td class="dots">⚪</td>
+      <td class="label">Справка</td>
+    </tr><tr class="row-accent-green">
+      <td class="metric">Разворот ≥50% хотя бы на одном рынке</td>
+      <td class="value">84.3%</td>
+      <td class="dots">🟢🟢🟢🟢🟢</td>
+      <td class="label">ОЧЕНЬ СИЛЬНО<span class="note">cocoa max до 12:00 ∨ coffee 30m</span></td>
+    </tr><tr class="row-accent-green">
+      <td class="metric">Cocoa — откат ≥50% (лучший до 12:00)</td>
+      <td class="value">78.4%</td>
+      <td class="dots">🟢🟢🟢🟢🟢</td>
+      <td class="label">ОЧЕНЬ СИЛЬНО</td>
+    </tr><tr class="row-accent-green">
+      <td class="metric">Cocoa — откат ≥50% именно к 12:00</td>
+      <td class="value">46.4%</td>
+      <td class="dots">🟢🟢🟢🟢</td>
+      <td class="label">Отлично</td>
+    </tr><tr class="row-accent-green">
+      <td class="metric">Coffee — разворот 30m после открытия</td>
+      <td class="value">38.0%</td>
+      <td class="dots">🟢🟢🟢</td>
+      <td class="label">Хорошо</td>
+    </tr><tr class="row-accent-green">
+      <td class="metric">Одновременно cocoa ≥50% и coffee разворот</td>
+      <td class="value">33.3%</td>
+      <td class="dots">🟢🟢🟢</td>
+      <td class="label">Хорошо<span class="note">синхронность</span></td>
+    </tr><tr class="row-accent-green">
+      <td class="metric">Одинаковый импульс 5m (08:15 / 08:45)</td>
+      <td class="value">35.1%</td>
+      <td class="dots">🟢🟢🟢</td>
+      <td class="label">Хорошо<span class="note">часто противоположно</span></td>
+    </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>⏰ Время разворота (cocoa)</h2>
+      <table>
+        <thead><tr><th>После открытия</th><th>Доля стартов</th><th></th><th>Зона</th></tr></thead>
+        <tbody><tr class="row-accent-yellow">
+        <td>0–5 мин</td>
+        <td>42.5% дней</td>
+        <td class="dots">🟡</td>
+        <td>Низкая</td>
+      </tr><tr class="row-accent-green">
+        <td>5–10 мин</td>
+        <td>4.4% дней</td>
+        <td class="dots">🟢</td>
+        <td>Растёт</td>
+      </tr><tr class="row-accent-green">
+        <td>10–15 мин</td>
+        <td>10.6% дней</td>
+        <td class="dots">🟢🟢🟢🟢🟢</td>
+        <td>Главная зона</td>
+      </tr><tr class="row-accent-green">
+        <td>15–20 мин</td>
+        <td>6.2% дней</td>
+        <td class="dots">🟢🟢🟢🟢</td>
+        <td>Очень высокая</td>
+      </tr><tr class="row-accent-green">
+        <td>20–30 мин</td>
+        <td>4.4% дней</td>
+        <td class="dots">🟢🟢🟢</td>
+        <td>Высокая</td>
+      </tr><tr class="row-accent-yellow">
+        <td>30–60 мин</td>
+        <td>0.0% дней</td>
+        <td class="dots">🟡</td>
+        <td>Низкая</td>
+      </tr></tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>🎯 Рабочее окно</h2>
+      <div class="timeline">Открытие
+│  Первое движение ██████
+├────► 5 мин   🟡 импульс
+├────► 10 мин  🟢🟢🟢🟢🟢  ГЛАВНАЯ ЗОНА (10–20 мин)
+├────► 20 мин  🟢🟢🟢🟢
+├────► 30 мин  🟢🟢🟢
+└────► 60 мин  🟡 поздно</div>
+      <p class="sub" style="margin:10px 0 0">Окно входа: <strong>5–30 мин</strong> после открытия cocoa; лучшее ядро <strong>10–20 мин</strong>.</p>
+    </section>
+
+    <section>
+      <h2>📅 Откат к 12:00 по дням недели</h2>
+      <table>
+        <thead>
+          <tr><th>День</th><th>N</th><th>≥50% к 12:00</th><th>≥50% max до 12</th><th>Замедление</th></tr>
+        </thead>
+        <tbody><tr>
+        <td class="wday">Понедельник</td>
+        <td class="n">24</td>
+        <td class="heat-5">62.5%</td>
+        <td class="heat-5">83.3%</td>
+        <td class="heat-5">62.5%</td>
+      </tr><tr>
+        <td class="wday">Вторник</td>
+        <td class="n">27</td>
+        <td class="heat-2">40.7%</td>
+        <td class="heat-5">77.8%</td>
+        <td class="heat-2">37.0%</td>
+      </tr><tr>
+        <td class="wday">Среда</td>
+        <td class="n">26</td>
+        <td class="heat-4">50.0%</td>
+        <td class="heat-5">76.9%</td>
+        <td class="heat-4">53.8%</td>
+      </tr><tr>
+        <td class="wday">Четверг</td>
+        <td class="n">26</td>
+        <td class="heat-4">50.0%</td>
+        <td class="heat-5">80.8%</td>
+        <td class="heat-4">50.0%</td>
+      </tr><tr>
+        <td class="wday">Пятница</td>
+        <td class="n">22</td>
+        <td class="heat-1">27.3%</td>
+        <td class="heat-5">72.7%</td>
+        <td class="heat-5">68.2%</td>
+      </tr></tbody>
+      </table>
+      <p class="sub" style="margin-top:8px">Лучше: <strong>Пн</strong> · Слабее к полудню: <strong>Пт, Вт</strong></p>
+    </section>
+
+    <section>
+      <h2>🚦 Готовность к входу</h2>
+      <table>
+        <thead><tr><th>Сигнал</th><th></th><th>Действие</th></tr></thead>
+        <tbody><tr class="row-accent-red"><td>🚀 Сильный импульс после открытия</td><td class="dots">🔴</td><td>Ждём</td></tr>
+<tr class="row-accent-yellow"><td>Импульс начинает слабеть (15–45m)</td><td class="dots">🟡</td><td>Внимание</td></tr>
+<tr class="row-accent-blue"><td>Цена не обновляет экстремум</td><td class="dots">🔵</td><td>Готовимся</td></tr>
+<tr class="row-accent-green"><td>Первая уверенная свеча обратно (~10m+)</td><td class="dots">🟢</td><td>Возможный вход</td></tr>
+<tr class="row-accent-green"><td>Откат ≥50% от импульса</td><td class="dots">🟢🟢🟢</td><td>Цель / фиксация</td></tr></tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>⭐ Итог</h2>
+      <table>
+        <tbody>
+          <tr class="row-accent-green"><td>Импульс после открытия почти всегда есть</td><td class="dots">🟢</td></tr>
+          <tr class="row-accent-green"><td>Часто следует замедление (15–45m)</td><td class="dots">🟢</td></tr>
+          <tr class="row-accent-green"><td>Откат ≥50% до полудня (cocoa max) — очень часто</td><td class="dots">🟢🟢🟢🟢</td></tr>
+          <tr class="row-accent-blue"><td>Не копировать coffee → cocoa в первые 5m (35.1% same)</td><td class="dots">🔵</td></tr>
+          <tr class="row-accent-yellow"><td>После 30m вероятность «раннего» сетапа падает</td><td class="dots">🟡</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <footer>
+    Источник: reports/*.csv · Пересборка: <code>python scripts/open_reversal_dashboard.py</code>
+    · Исследование, не торговый совет.
+  </footer>
+</body>
+</html>
