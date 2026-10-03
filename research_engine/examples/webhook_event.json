@@ -1,0 +1,5 @@
+{
+  "reason": "range_expansion",
+  "symbol": "EURUSD",
+  "note": "Payload a local collector can send when it sees a fast move. This is a trigger, not a forecast."
+}
