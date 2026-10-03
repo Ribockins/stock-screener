@@ -80,13 +80,21 @@ def horizon_bars(hours, timeframe_seconds: int) -> int | None:
     return count
 
 
-def session_label(moment: datetime, session_timezone: str) -> str:
+def session_label(moment: datetime, session_timezone: str, profile: str = "fx") -> str:
     """Session of a completed bar, classified on its end time.
 
-    Half-open London-clock windows: Asia 00:00-07:00, London 07:00-16:00,
-    New York 13:00-22:00. The overlap is its own label.
+    fx uses London-clock windows. energy uses New York time for NG and WTI:
+    Asia 18:00-03:00, Europe 03:00-09:00, US 09:00-17:00, halt 17:00-18:00.
     """
     local_time = moment.astimezone(ZoneInfo(session_timezone)).time()
+    if profile == "energy":
+        if time(17, 0) <= local_time < time(18, 0):
+            return "halt"
+        if local_time >= time(18, 0) or local_time < time(3, 0):
+            return "asia"
+        if time(3, 0) <= local_time < time(9, 0):
+            return "europe"
+        return "us"
     london = time(7, 0) <= local_time < time(16, 0)
     new_york = time(13, 0) <= local_time < time(22, 0)
     asia = time(0, 0) <= local_time < time(7, 0)

@@ -135,6 +135,17 @@ class Event:
     previous: Decimal | None
     kind: str
     eurusd_sign: int | None = None
+    signs: dict[str, int] | None = None
+
+    def sign_for(self, symbol: str) -> int | None:
+        table = self.signs or {}
+        if symbol in table:
+            return table[symbol]
+        if "*" in table:
+            return table["*"]
+        if symbol == "EURUSD":
+            return self.eurusd_sign
+        return None
 
 
 @dataclass(frozen=True)

@@ -42,7 +42,7 @@ def compute_features(bars: list[Bar], config: EngineConfig) -> list[Feature | No
             london_low = None
             london_day = day
 
-        session = session_label(end, config.session_timezone)
+        session = session_label(end, config.session_timezone, config.session_profile)
         in_london = session in {"london", "overlap"}
         broke_high = False
         broke_low = False

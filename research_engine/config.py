@@ -39,6 +39,7 @@ class EngineConfig:
     model_version: str = "0.1.0"
     volume_kind: str = "unspecified"
     timestamp_is_bar_open: bool = True
+    session_profile: str = "fx"
 
     def __post_init__(self) -> None:
         if self.timeframe_seconds <= 0:
@@ -61,6 +62,7 @@ class EngineConfig:
                 f"pip={self.pip_size}",
                 f"band={self.flat_band_pips}",
                 f"session_tz={self.session_timezone}",
+                f"session_profile={self.session_profile}",
                 f"trend_band={self.trend_band}",
                 f"atr={self.atr_period}",
                 f"sma={self.sma_period}",

@@ -97,9 +97,21 @@ def _event(row: dict[str, str]) -> Event:
             previous=_optional(row.get("previous", "")),
             kind=row.get("kind", "scheduled") or "scheduled",
             eurusd_sign=_sign(row.get("eurusd_sign", "")),
+            signs=_signs(row),
         )
     except (KeyError, InvalidOperation) as exc:
         raise ValueError(f"invalid event row: {row}") from exc
+
+
+def _signs(row: dict[str, str]) -> dict[str, int]:
+    columns = {"ng_sign": "NG", "wti_sign": "WTI", "eurusd_sign": "EURUSD", "sign": "*"}
+    parsed = {}
+    for column, symbol in columns.items():
+        if row.get(column):
+            value = _sign(row[column])
+            if value is not None:
+                parsed[symbol] = value
+    return parsed
 
 
 def _sign(text: str) -> int | None:

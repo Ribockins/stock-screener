@@ -13,6 +13,7 @@ from decimal import Decimal
 
 from research_engine.config import EngineConfig
 from research_engine.features import compute_features
+from research_engine.instruments import instrument
 from research_engine.records import Bar, Event, Feature
 
 _LEAN = Decimal("0.1")
@@ -31,6 +32,7 @@ class LayerScore:
 
 @dataclass(frozen=True)
 class DirectionProposal:
+    symbol: str
     decision_time: datetime
     source: str
     delay_seconds: int
@@ -54,7 +56,7 @@ def build_proposal(
     chosen = _latest_two_hour_feature(features)
     if chosen is None:
         return None
-    return proposal_for_feature(chosen, events, fetched_at, source)
+    return proposal_for_feature(chosen, events, fetched_at, source, config.symbol)
 
 
 def proposal_for_feature(
@@ -62,11 +64,12 @@ def proposal_for_feature(
     events: list[Event],
     fetched_at: datetime,
     source: str,
+    symbol: str = "EURUSD",
 ) -> DirectionProposal:
     delay = int((fetched_at - feature.decision_time).total_seconds())
     status = "published" if 0 <= delay <= _STALE_SECONDS else "withheld"
-    geopolitical = _event_layer(events, feature.decision_time, _GEO_KINDS, "geopolitical", "геополитика")
-    fundamental = _event_layer(events, feature.decision_time, _FUND_KINDS, "fundamental", "фундамент")
+    geopolitical = _event_layer(events, feature.decision_time, _GEO_KINDS, "geopolitical", "геополитика", symbol)
+    fundamental = _event_layer(events, feature.decision_time, _FUND_KINDS, "fundamental", "фундамент", symbol)
     technical = LayerScore("technical", _technical_score(feature), _technical_note(feature))
     candle = LayerScore("candle", _candle_score(feature), _candle_note(feature))
     layers = (geopolitical, fundamental, technical, candle)
@@ -92,6 +95,7 @@ def proposal_for_feature(
         direction = raw_direction
         strength = abs(combined)
     return DirectionProposal(
+        symbol=symbol,
         decision_time=feature.decision_time,
         source=source,
         delay_seconds=delay,
@@ -112,7 +116,7 @@ def proposal_for_feature(
 
 def render_proposal(proposal: DirectionProposal) -> str:
     lines = [
-        f"Слот 2ч: {proposal.decision_time.strftime('%Y-%m-%dT%H:%M:%SZ')}",
+        f"{proposal.symbol}, слот 2ч: {proposal.decision_time.strftime('%Y-%m-%dT%H:%M:%SZ')}",
         f"Источник котировок: {proposal.source}",
         _delay_line(proposal),
         "Сравнение слоёв, в этом порядке:",
@@ -132,6 +136,9 @@ def render_proposal(proposal: DirectionProposal) -> str:
     else:
         lines.append(f"Направление: {_direction_text(proposal.direction)}")
         lines.append(f"Сила предложения: {_shown(proposal.strength)}")
+    spec = instrument(proposal.symbol)
+    if spec is not None:
+        lines.append(spec.contract_note)
     lines.append("Сила — это среднее чтение слоёв, не вероятность и не приказ.")
     return "\n".join(lines) + "\n"
 
@@ -139,10 +146,10 @@ def render_proposal(proposal: DirectionProposal) -> str:
 def describe_sources() -> str:
     return "\n".join(
         [
-            "Источники, которые можно собирать с задержкой от минуты:",
-            "- sierra_csv: экспорт Sierra, уже читается командой run.",
-            "- yfinance: часовой EURUSD=X. Объём этой пары не используется, это не bid/ask.",
-            "- events_csv: фундамент и геополитика. Нужны available_at и eurusd_sign (-1, 0, 1).",
+            "Сейчас рабочий набор — NG и WTI. Задержка от минуты нормальна.",
+            "- yfinance: NG=F (Henry Hub) и CL=F (WTI), часовые бары фронтального контракта.",
+            "- sierra_csv: экспорт этих контрактов, если файл доступен локально.",
+            "- events_csv: фундамент и геополитика. Знак отдельно: ng_sign и wti_sign (-1, 0, 1).",
             "Пока не входят в число силы:",
             "- TradingView из скринера: пакет и логин, и текущий загрузчик смотрит акции NASDAQ.",
             "- веб-поиск: у заголовка нет версии на момент решения, поэтому он не двигает силу.",
@@ -185,7 +192,7 @@ def _candle_score(feature: Feature) -> Decimal:
 
 
 def _event_layer(
-    events: list[Event], decision: datetime, kinds: set[str], key: str, title: str
+    events: list[Event], decision: datetime, kinds: set[str], key: str, title: str, symbol: str
 ) -> LayerScore:
     names: list[str] = []
     contributions: list[Decimal] = []
@@ -196,7 +203,8 @@ def _event_layer(
         if age_hours > _WINDOW_HOURS:
             continue
         names.append(event.name)
-        if event.eurusd_sign is None or event.eurusd_sign == 0:
+        bias = event.sign_for(symbol)
+        if bias is None or bias == 0:
             continue
         freshness = Decimal(1) - (age_hours / _WINDOW_HOURS)
         if freshness <= 0:
@@ -205,7 +213,7 @@ def _event_layer(
         magnitude = _clip(magnitude, Decimal(1))
         if magnitude < 0:
             magnitude = Decimal(0)
-        contributions.append(Decimal(event.eurusd_sign) * magnitude * freshness)
+        contributions.append(Decimal(bias) * magnitude * freshness)
     if not names:
         return LayerScore(key, None, f"{title}: в последние 48 часов событий нет")
     if not contributions:

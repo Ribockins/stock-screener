@@ -17,6 +17,7 @@ from research_engine.bars import closed_bars, parse_sierra_csv
 from research_engine.clock import parse_timeframe, parse_utc
 from research_engine.config import EngineConfig
 from research_engine.fundamentals import load_events
+from research_engine.instruments import ACTIVE, instrument
 from research_engine.pipeline import execute, refresh
 from research_engine.sources import SourceError, fetch_yfinance_bars
 from research_engine.store import Journal
@@ -45,8 +46,9 @@ def main(argv: list[str] | None = None) -> int:
     report = sub.add_parser("report", help="print the journal without reading a CSV")
     _add_config(report)
 
-    propose = sub.add_parser("propose", help="two-hour direction strength from the layers on hand")
-    _add_config(propose)
+    propose = sub.add_parser("propose", help="two-hour direction strength for NG and WTI")
+    _add_config(propose, symbol_default="")
+    propose.set_defaults(db="data/research/energy.sqlite")
     propose.add_argument("--csv")
     propose.add_argument("--source", choices=("csv", "yfinance"), default="csv")
     propose.add_argument("--events")
@@ -59,9 +61,9 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "sources":
             print(describe_sources(), end="")
             return 0
-        config = _config_from_args(args)
         if args.command == "propose":
-            return _propose(args, config)
+            return _propose(args)
+        config = _config_from_args(args)
         if args.command == "run":
             source_seconds = config.timeframe_seconds
             if args.resample:
@@ -87,34 +89,65 @@ def main(argv: list[str] | None = None) -> int:
     return result.exit_code
 
 
-def _propose(args: argparse.Namespace, config: EngineConfig) -> int:
+def _propose(args: argparse.Namespace) -> int:
     now = parse_utc(args.now) if args.now else datetime.now(timezone.utc)
     events = []
     if args.events:
         events = load_events(Path(args.events).read_text(encoding="utf-8-sig"))
-    if args.source == "yfinance":
-        bars, source_name = fetch_yfinance_bars(config.symbol, now, 3600)
-        config = replace(config, timeframe_seconds=3600, volume_kind="yfinance_fx_volume_unused")
-    else:
-        if not args.csv:
-            raise ValueError("для --source csv нужен --csv")
-        parsed, _issues = parse_sierra_csv(Path(args.csv).read_text(encoding="utf-8-sig"), config)
-        bars, _dropped = closed_bars(parsed, config.timeframe_seconds, now)
-        source_name = f"csv {args.csv}"
-    proposal = build_proposal(bars, config, events, now, source_name)
-    if proposal is None:
-        print("Нет закрытого бара на чётной двухчасовой границе UTC.")
-        return 2
-    journal = Journal(args.db)
-    state = journal.save_proposal(config.symbol, config.model_version, proposal)
-    print(render_proposal(proposal), end="")
-    print(f"Журнал: {state}")
-    return 0 if proposal.status == "published" else 0
+    symbols = [args.symbol] if args.symbol else list(ACTIVE)
+    if args.source == "csv" and len(symbols) != 1:
+        raise ValueError("для CSV укажите один символ: --symbol NG или --symbol WTI")
+    found = 0
+    for symbol in symbols:
+        config = _config_for_symbol(args, symbol)
+        if args.source == "yfinance":
+            bars, source_name = fetch_yfinance_bars(symbol, now, 3600)
+            config = replace(config, timeframe_seconds=3600)
+        else:
+            parsed, _issues = parse_sierra_csv(Path(args.csv).read_text(encoding="utf-8-sig"), config)
+            bars, _dropped = closed_bars(parsed, config.timeframe_seconds, now)
+            source_name = f"csv {args.csv}"
+        proposal = build_proposal(bars, config, events, now, source_name)
+        if proposal is None:
+            print(f"{symbol}: нет закрытого бара на чётной двухчасовой границе UTC.")
+            continue
+        found += 1
+        state = Journal(args.db).save_proposal(symbol, config.model_version, proposal)
+        print(render_proposal(proposal), end="")
+        print(f"Журнал: {state}")
+    return 0 if found else 2
 
 
-def _add_config(parser: argparse.ArgumentParser) -> None:
+def _config_for_symbol(args: argparse.Namespace, symbol: str) -> EngineConfig:
+    config = EngineConfig(
+        symbol=symbol,
+        timeframe_seconds=parse_timeframe(args.timeframe),
+        source_timezone=args.source_timezone,
+        pip_size=Decimal(args.pip_size),
+        flat_band_pips=Decimal(args.flat_band_pips),
+        min_samples=args.min_samples,
+        atr_period=args.atr_period,
+        sma_period=args.sma_period,
+        volume_kind=args.volume_kind,
+        model_version=args.model_version,
+    )
+    spec = instrument(symbol)
+    if spec is None:
+        return config
+    return replace(
+        config,
+        pip_size=spec.point_size,
+        flat_band_pips=spec.flat_band,
+        source_timezone="UTC",
+        session_timezone=spec.timezone,
+        session_profile=spec.profile,
+        volume_kind="yfinance_contract_volume",
+    )
+
+
+def _add_config(parser: argparse.ArgumentParser, symbol_default: str = "EURUSD") -> None:
     parser.add_argument("--db", default="data/research/eurusd.sqlite")
-    parser.add_argument("--symbol", default="EURUSD")
+    parser.add_argument("--symbol", default=symbol_default)
     parser.add_argument("--timeframe", default="1h")
     parser.add_argument("--source-timezone", default="UTC")
     parser.add_argument("--pip-size", default="0.0001")

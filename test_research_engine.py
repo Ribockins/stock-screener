@@ -19,6 +19,7 @@ from research_engine.config import EngineConfig
 from research_engine.fundamentals import visible_events
 from research_engine.model import eligible_indices, nearest_indices, nearest_rank, walk_forward
 from research_engine.pipeline import execute
+from research_engine.instruments import instrument
 from research_engine.records import Bar, Event, ExternalSignal, Feature, ForecastDraft, StoredForecast
 from research_engine.sources import bars_from_ohlc
 from research_engine.strength import build_proposal, proposal_for_feature, render_proposal
@@ -123,6 +124,11 @@ class ResearchEngineTests(unittest.TestCase):
         self.assertEqual(session_label(datetime(2026, 7, 1, 12, 0, tzinfo=timezone.utc), "Europe/London"), "overlap")
         self.assertEqual(session_label(datetime(2026, 1, 15, 12, 0, tzinfo=timezone.utc), "Europe/London"), "london")
         self.assertEqual(session_label(datetime(2026, 1, 15, 0, 30, tzinfo=timezone.utc), "Europe/London"), "asia")
+        self.assertEqual(session_label(datetime(2026, 7, 2, 14, 0, tzinfo=timezone.utc), "America/New_York", "energy"), "us")
+        self.assertEqual(session_label(datetime(2026, 1, 15, 15, 0, tzinfo=timezone.utc), "America/New_York", "energy"), "us")
+        self.assertEqual(session_label(datetime(2026, 7, 2, 21, 30, tzinfo=timezone.utc), "America/New_York", "energy"), "halt")
+        self.assertEqual(session_label(datetime(2026, 7, 2, 22, 0, tzinfo=timezone.utc), "America/New_York", "energy"), "asia")
+        self.assertEqual(session_label(datetime(2026, 7, 2, 8, 0, tzinfo=timezone.utc), "America/New_York", "energy"), "europe")
         self.assertEqual(parse_timeframe("15m"), 900)
         self.assertEqual(parse_timeframe("4h"), 14400)
 
@@ -364,6 +370,31 @@ class ResearchEngineTests(unittest.TestCase):
         self.assertNotIn("old shock", text)
         self.assertIn("не вероятность", text)
         self.assertIn("Сила предложения", text)
+
+    def test_ng_and_wti_keep_separate_event_signs(self):
+        decision = datetime(2026, 7, 2, 10, 0, tzinfo=timezone.utc)
+        feature = _feature(decision, Decimal("0"), Decimal("0"))
+        event = Event(
+            decision,
+            "disruption",
+            "USD",
+            3,
+            None,
+            None,
+            None,
+            "geopolitical",
+            signs={"NG": -1, "WTI": 1},
+        )
+        natural_gas = proposal_for_feature(feature, [event], decision + timedelta(minutes=2), "yfinance NG=F", "NG")
+        wti = proposal_for_feature(feature, [event], decision + timedelta(minutes=2), "yfinance CL=F", "WTI")
+        self.assertEqual(natural_gas.layers[0].score, Decimal("-1"))
+        self.assertEqual(wti.layers[0].score, Decimal("1"))
+        self.assertIn("Henry Hub", render_proposal(natural_gas))
+        self.assertIn("фронт WTI", render_proposal(wti))
+        self.assertEqual(instrument("NG").yahoo, "NG=F")
+        self.assertEqual(instrument("WTI").yahoo, "CL=F")
+        self.assertEqual(instrument("WTI").point_size, Decimal("0.01"))
+        self.assertEqual(instrument("NG").point_size, Decimal("0.001"))
 
     def test_stale_slot_does_not_publish_strength(self):
         decision = datetime(2026, 7, 2, 10, 0, tzinfo=timezone.utc)

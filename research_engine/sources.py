@@ -1,6 +1,6 @@
 """Bar sources the research engine can collect itself.
 
-A delay of a minute or more is expected. Yahoo FX volume is not bid/ask volume.
+A delay of a minute or more is expected. NG and WTI come from Yahoo front months.
 """
 
 from __future__ import annotations
@@ -9,9 +9,10 @@ from datetime import datetime, timezone
 from decimal import Decimal
 
 from research_engine.clock import bar_end
+from research_engine.instruments import instrument
 from research_engine.records import Bar
 
-_TICKERS = {"EURUSD": "EURUSD=X"}
+_TICKERS = {"EURUSD": "EURUSD=X", "NG": "NG=F", "WTI": "CL=F"}
 
 
 class SourceError(RuntimeError):
@@ -19,7 +20,8 @@ class SourceError(RuntimeError):
 
 
 def fetch_yfinance_bars(symbol: str, now: datetime, timeframe_seconds: int = 3600) -> tuple[list[Bar], str]:
-    ticker = _TICKERS.get(symbol, symbol)
+    spec = instrument(symbol)
+    ticker = spec.yahoo if spec is not None else _TICKERS.get(symbol, symbol)
     try:
         import yfinance as yf
     except ImportError as exc:
