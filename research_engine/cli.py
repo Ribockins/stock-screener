@@ -13,9 +13,14 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
 
+from research_engine.bars import closed_bars, parse_sierra_csv
 from research_engine.clock import parse_timeframe, parse_utc
 from research_engine.config import EngineConfig
+from research_engine.fundamentals import load_events
 from research_engine.pipeline import execute, refresh
+from research_engine.sources import SourceError, fetch_yfinance_bars
+from research_engine.store import Journal
+from research_engine.strength import build_proposal, describe_sources, render_proposal
 
 MODES = ("hourly", "london-open", "us-open", "macro", "daily")
 
@@ -40,9 +45,23 @@ def main(argv: list[str] | None = None) -> int:
     report = sub.add_parser("report", help="print the journal without reading a CSV")
     _add_config(report)
 
+    propose = sub.add_parser("propose", help="two-hour direction strength from the layers on hand")
+    _add_config(propose)
+    propose.add_argument("--csv")
+    propose.add_argument("--source", choices=("csv", "yfinance"), default="csv")
+    propose.add_argument("--events")
+    propose.add_argument("--now")
+
+    sub.add_parser("sources", help="list price and event sources this process can collect")
+
     args = parser.parse_args(argv)
     try:
+        if args.command == "sources":
+            print(describe_sources(), end="")
+            return 0
         config = _config_from_args(args)
+        if args.command == "propose":
+            return _propose(args, config)
         if args.command == "run":
             source_seconds = config.timeframe_seconds
             if args.resample:
@@ -61,11 +80,36 @@ def main(argv: list[str] | None = None) -> int:
             )
         else:
             result = refresh(config, args.db)
-    except (OSError, ValueError) as exc:
+    except (OSError, ValueError, SourceError) as exc:
         print(f"Ошибка чтения: {exc}", file=sys.stderr)
         return 3
     print(result.report, end="")
     return result.exit_code
+
+
+def _propose(args: argparse.Namespace, config: EngineConfig) -> int:
+    now = parse_utc(args.now) if args.now else datetime.now(timezone.utc)
+    events = []
+    if args.events:
+        events = load_events(Path(args.events).read_text(encoding="utf-8-sig"))
+    if args.source == "yfinance":
+        bars, source_name = fetch_yfinance_bars(config.symbol, now, 3600)
+        config = replace(config, timeframe_seconds=3600, volume_kind="yfinance_fx_volume_unused")
+    else:
+        if not args.csv:
+            raise ValueError("для --source csv нужен --csv")
+        parsed, _issues = parse_sierra_csv(Path(args.csv).read_text(encoding="utf-8-sig"), config)
+        bars, _dropped = closed_bars(parsed, config.timeframe_seconds, now)
+        source_name = f"csv {args.csv}"
+    proposal = build_proposal(bars, config, events, now, source_name)
+    if proposal is None:
+        print("Нет закрытого бара на чётной двухчасовой границе UTC.")
+        return 2
+    journal = Journal(args.db)
+    state = journal.save_proposal(config.symbol, config.model_version, proposal)
+    print(render_proposal(proposal), end="")
+    print(f"Журнал: {state}")
+    return 0 if proposal.status == "published" else 0
 
 
 def _add_config(parser: argparse.ArgumentParser) -> None:

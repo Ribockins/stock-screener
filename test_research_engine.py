@@ -19,7 +19,9 @@ from research_engine.config import EngineConfig
 from research_engine.fundamentals import visible_events
 from research_engine.model import eligible_indices, nearest_indices, nearest_rank, walk_forward
 from research_engine.pipeline import execute
-from research_engine.records import Bar, Event, ExternalSignal, ForecastDraft, StoredForecast
+from research_engine.records import Bar, Event, ExternalSignal, Feature, ForecastDraft, StoredForecast
+from research_engine.sources import bars_from_ohlc
+from research_engine.strength import build_proposal, proposal_for_feature, render_proposal
 from research_engine.store import Journal
 from research_engine.targets import DOWN, FLAT, UP, classify, label_at
 
@@ -336,6 +338,102 @@ class ResearchEngineTests(unittest.TestCase):
             self.assertIn("не торговый сигнал", completed.stdout)
             self.assertIn("Нет ни одного бара с полным окном признаков", completed.stdout)
             self.assertNotIn("эмпирическая частота прошлого", completed.stdout)
+
+    def test_two_hour_strength_compares_layers_and_ignores_future_events(self):
+        decision = datetime(2026, 7, 2, 10, 0, tzinfo=timezone.utc)
+        feature = _feature(decision, Decimal("1"), Decimal("-1"))
+        events = [
+            Event(decision, "sanctions", "USD", 3, None, None, None, "geopolitical", eurusd_sign=-1),
+            Event(decision - timedelta(minutes=30), "CPI", "USD", 3, Decimal("0.3"), Decimal("0.2"), None, "scheduled"),
+            Event(decision + timedelta(hours=1), "NFP", "USD", 3, Decimal("1"), Decimal("1"), None, "scheduled", 1),
+            Event(decision - timedelta(hours=49), "old shock", "EUR", 3, None, None, None, "geopolitical", 1),
+        ]
+        proposal = proposal_for_feature(feature, events, decision + timedelta(minutes=2), "csv test")
+        self.assertEqual(proposal.status, "published")
+        self.assertEqual(proposal.delay_seconds, 120)
+        self.assertEqual(proposal.layers[0].score, Decimal("-1"))
+        self.assertIsNone(proposal.layers[1].score)
+        self.assertEqual(proposal.combined, Decimal("-1") / Decimal(3))
+        self.assertEqual(proposal.direction, "down")
+        self.assertEqual(proposal.strength, Decimal(1) / Decimal(3))
+        self.assertTrue(proposal.disagreement)
+        text = render_proposal(proposal)
+        self.assertIn("sanctions", text)
+        self.assertIn("CPI", text)
+        self.assertNotIn("NFP", text)
+        self.assertNotIn("old shock", text)
+        self.assertIn("не вероятность", text)
+        self.assertIn("Сила предложения", text)
+
+    def test_stale_slot_does_not_publish_strength(self):
+        decision = datetime(2026, 7, 2, 10, 0, tzinfo=timezone.utc)
+        proposal = proposal_for_feature(_feature(decision, Decimal("1"), Decimal("1")), [], decision + timedelta(hours=3), "csv")
+        self.assertEqual(proposal.status, "withheld")
+        self.assertIsNone(proposal.strength)
+        self.assertIn("не публикуется", render_proposal(proposal))
+
+    def test_proposal_uses_the_latest_even_utc_hour_only(self):
+        start = datetime(2026, 7, 2, 6, 0, tzinfo=timezone.utc)
+        bars = [
+            _bar(start + timedelta(hours=i), format(Decimal("1.1000") + Decimal("0.0002") * i, "f"))
+            for i in range(5)
+        ]
+        now = datetime(2026, 7, 2, 11, 2, tzinfo=timezone.utc)
+        proposal = build_proposal(bars, _config(), [], now, "csv")
+        self.assertEqual(proposal.decision_time, datetime(2026, 7, 2, 10, 0, tzinfo=timezone.utc))
+        kept = bars_from_ohlc(
+            [
+                (datetime(2026, 7, 2, 8, 0, tzinfo=timezone.utc), 1.1, 1.11, 1.09, 1.1),
+                (datetime(2026, 7, 2, 11, 0, tzinfo=LONDON), 1.1, 1.11, 1.09, 1.1),
+                (datetime(2026, 7, 2, 12, 0, tzinfo=timezone.utc), 1.1, 1.11, 1.09, 1.1),
+            ],
+            datetime(2026, 7, 2, 12, 0, tzinfo=timezone.utc),
+            3600,
+        )
+        self.assertEqual(
+            [bar.timestamp for bar in kept],
+            [
+                datetime(2026, 7, 2, 8, 0, tzinfo=timezone.utc),
+                datetime(2026, 7, 2, 10, 0, tzinfo=timezone.utc),
+            ],
+        )
+
+    def test_proposal_journal_keeps_the_first_reading(self):
+        decision = datetime(2026, 7, 2, 10, 0, tzinfo=timezone.utc)
+        proposal = proposal_for_feature(_feature(decision, Decimal("1"), Decimal("1")), [], decision + timedelta(minutes=2), "csv")
+        with tempfile.TemporaryDirectory() as tmp:
+            journal = Journal(str(Path(tmp) / "j.sqlite"))
+            self.assertEqual(journal.save_proposal("EURUSD", "0.1.0", proposal), "inserted")
+            self.assertEqual(journal.save_proposal("EURUSD", "0.1.0", proposal), "exists")
+
+
+def _feature(decision: datetime, technical: Decimal, candle: Decimal) -> Feature:
+    bullish = candle > 0
+    bearish = candle < 0
+    return Feature(
+        bar_index=1,
+        decision_time=decision,
+        bar_open=decision - timedelta(hours=1),
+        session="london",
+        bucket="london|trend_up",
+        h1_trend_score=technical,
+        h4_score=technical,
+        momentum=technical,
+        acceleration=None,
+        atr=Decimal("0.001"),
+        atr_percentile=None,
+        adr_completion=None,
+        dist_day_high_pips=Decimal("1"),
+        dist_day_low_pips=Decimal("1"),
+        bullish_engulfing=bullish,
+        bearish_engulfing=bearish,
+        bullish_pin=False,
+        bearish_pin=False,
+        inside_bar=False,
+        broke_london_high=False,
+        broke_london_low=False,
+        volume_imbalance=None,
+    )
 
 
 if __name__ == "__main__":

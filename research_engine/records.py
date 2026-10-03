@@ -134,6 +134,7 @@ class Event:
     forecast: Decimal | None
     previous: Decimal | None
     kind: str
+    eurusd_sign: int | None = None
 
 
 @dataclass(frozen=True)

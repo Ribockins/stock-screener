@@ -64,6 +64,26 @@ CREATE TABLE IF NOT EXISTS forecasts (
         model_name, model_version, definition_id
     )
 );
+CREATE TABLE IF NOT EXISTS direction_proposals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    symbol TEXT NOT NULL,
+    decision_time TEXT NOT NULL,
+    model_version TEXT NOT NULL,
+    source TEXT NOT NULL,
+    delay_seconds INTEGER,
+    status TEXT NOT NULL,
+    direction TEXT NOT NULL,
+    strength TEXT,
+    combined TEXT,
+    disagreement INTEGER NOT NULL,
+    geopolitical TEXT,
+    fundamental TEXT,
+    technical TEXT,
+    candle TEXT,
+    detail_json TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    UNIQUE (symbol, decision_time, model_version)
+);
 """
 
 
@@ -311,6 +331,48 @@ class Journal:
                     )
                     unavailable += 1
         return resolved, unavailable
+
+    def save_proposal(self, symbol: str, model_version: str, proposal) -> str:
+        decision = format_utc(proposal.decision_time)
+        with self._connect() as conn:
+            existing = conn.execute(
+                """
+                SELECT id FROM direction_proposals
+                WHERE symbol=? AND decision_time=? AND model_version=?
+                """,
+                (symbol, decision, model_version),
+            ).fetchone()
+            if existing is not None:
+                return "exists"
+            scores = {layer.name: layer.score for layer in proposal.layers}
+            conn.execute(
+                """
+                INSERT INTO direction_proposals (
+                    symbol, decision_time, model_version, source, delay_seconds, status,
+                    direction, strength, combined, disagreement, geopolitical, fundamental,
+                    technical, candle, detail_json, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    symbol,
+                    decision,
+                    model_version,
+                    proposal.source,
+                    proposal.delay_seconds,
+                    proposal.status,
+                    proposal.direction,
+                    _text(proposal.strength),
+                    _text(proposal.combined),
+                    1 if proposal.disagreement else 0,
+                    _text(scores.get("geopolitical")),
+                    _text(scores.get("fundamental")),
+                    _text(scores.get("technical")),
+                    _text(scores.get("candle")),
+                    json.dumps(proposal.detail, ensure_ascii=False, sort_keys=True),
+                    format_utc(datetime.now(timezone.utc)),
+                ),
+            )
+        return "inserted"
 
     def _connect(self) -> sqlite3.Connection:
         return sqlite3.connect(self.path)

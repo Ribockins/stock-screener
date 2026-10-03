@@ -49,6 +49,7 @@ def visible_events(events: list[Event], decision_time: datetime) -> list[dict]:
                 "previous": _num(event.previous),
                 "kind": event.kind,
                 "surprise": surprise,
+                "eurusd_sign": event.eurusd_sign,
                 "age_hours": round(age_hours, 4),
             }
         )
@@ -95,9 +96,19 @@ def _event(row: dict[str, str]) -> Event:
             forecast=_optional(row.get("forecast", "")),
             previous=_optional(row.get("previous", "")),
             kind=row.get("kind", "scheduled") or "scheduled",
+            eurusd_sign=_sign(row.get("eurusd_sign", "")),
         )
     except (KeyError, InvalidOperation) as exc:
         raise ValueError(f"invalid event row: {row}") from exc
+
+
+def _sign(text: str) -> int | None:
+    if text is None or not str(text).strip():
+        return None
+    value = int(str(text).strip())
+    if value not in (-1, 0, 1):
+        raise ValueError("eurusd_sign must be -1, 0, or 1")
+    return value
 
 
 def _optional(text: str) -> Decimal | None:
